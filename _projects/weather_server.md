@@ -34,8 +34,6 @@ The **Weather Server** is built to demonstrate the following workflow:
 2. The data is transmitted over Wi-Fi using HTTP requests.
 3. A remote Python server receives and processes the data for display or storage.
 
-This setup is ideal for learning about IoT systems, including sensor integration, microcontroller programming, and network communication.
-
 ## Code Snippet
 
 Below is a brief example of how the ESP32C3 reads sensor data and sends it to the server:

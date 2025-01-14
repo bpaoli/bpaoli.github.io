@@ -1,19 +1,27 @@
 ---
 name: Frog Jump Verilog Game
 tools: [Verilog, Logic Design, FPGA]
-image: https://www.amd.com/content/dam/amd/en/images/products/boards/2410750-artix-7-xc7a35t-board-product.jpg
-description: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+image: assets/images/basys3.avif
+description: A simple hardware-implemented game where a frog jumps to avoid obstacles, built for the Basys3 FPGA board using Verilog and VGA output.
 ---
+
 # Frog Jump
 
-This is a very simple frog jump game where a small sprite has to avoid objects floating across the screen. The project is designed for the Basys3 board over the VGA connection. The entire game is implemented in hardware on the FPGA using low-level logic.
+The **Frog Jump Game** is a straightforward yet engaging project implemented entirely in hardware using Verilog. The game features a small sprite (representing the frog) that must jump to avoid obstacles moving across the screen. It runs on the Basys3 FPGA board, leveraging its VGA output for graphics display.  
 
-## Code
-> **Note:** Only the top-level module is shown here. The codebase for the entire project can be found at:  
-> [https://github.com/bpaoli/Frog-Jump-Game.git](https://github.com/bpaoli/Frog-Jump-Game.git)
+This project demonstrates the use of low-level logic design and Verilog to create a functional game without any software processing. The entire gameplay mechanics, obstacle generation, and sprite movement are achieved through combinational and sequential logic implemented in the FPGA.
 
+## Features
+- **Platform**: Designed specifically for the Basys3 FPGA board.  
+- **Graphics**: Uses VGA output to render the game on an external display.  
+- **Logic Design**: Implements game mechanics purely in hardware using Verilog.  
+- **Interactive Gameplay**: Players control the frog’s jumps to avoid obstacles.  
 
-```systemverilog
+## Code  
+> **Note:** Only the top-level module is shown here. The complete project, including all modules and design files, can be found on GitHub:  
+> [GitHub Repository: Frog Jump Game](https://github.com/bpaoli/Frog-Jump-Game.git)
+
+```verilog
 module fifo_cdc_1r1w
  #(parameter [31:0] width_p = 32
   ,parameter [31:0] lg_depth_p = 8

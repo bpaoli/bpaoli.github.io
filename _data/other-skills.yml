@@ -19,13 +19,13 @@
   color: info
 
 - name: Software Design
-  percentage: 50
+  percentage: 30
   color: light
 
 - name: Planning
-  percentage: 50
+  percentage: 80
   color: danger
 
 - name: Business Strategy
-  percentage: 60
+  percentage: 50
   color: warning

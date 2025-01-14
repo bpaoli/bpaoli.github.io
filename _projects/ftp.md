@@ -97,17 +97,6 @@ Simple reliable file transfer is a set of two programs used to send files over a
 3. **Final ACK Drop**:  
    - If the server’s final ACK is dropped, the client may time out even if the file transfer is complete.
 
----
-
-## Example Scenario
-
-**Test Parameters**:
-- Server drop rate: 50%  
-- Client window size: 10  
-- MTU: 513  
-- Maximum sequence number: 189  
-
----
 
 ## Client Side Code
 ```c++
