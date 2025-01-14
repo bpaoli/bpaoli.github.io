@@ -1,0 +1,31 @@
+- name: Supply Chain Mangement
+  percentage: 70
+  color: danger
+
+- name: Product Development
+  percentage: 70
+  color: primary
+
+- name: Innovation
+  percentage: 80
+  color: warning
+
+- name: Entrepreneurship
+  percentage: 60
+  color: success
+
+- name: Information Technology
+  percentage: 70
+  color: info
+
+- name: Software Design
+  percentage: 50
+  color: light
+
+- name: Planning
+  percentage: 50
+  color: danger
+
+- name: Business Strategy
+  percentage: 60
+  color: warning

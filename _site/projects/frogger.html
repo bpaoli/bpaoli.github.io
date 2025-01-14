@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by yousinix
+  Free for personal and commercial use under the MIT license
+  https://github.com/yousinix/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  
+  
+  
+
+  
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Frog Jump Verilog Game">
+  <meta property="og:description" content="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.">
+  <meta property="og:image" content="https://www.amd.com/content/dam/amd/en/images/products/boards/2410750-artix-7-xc7a35t-board-product.jpg">
+
+  <title>Frog Jump Verilog Game</title>
+  <meta name="description" content="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.">
+
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Theme style -->
+  <script src="/assets/js/theme.js"></script>
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css">
+
+</head>
+
+
+<body class="h-100 d-flex flex-column">
+
+  <main class="flex-shrink-0 container mt-5">
+    <nav class="navbar navbar-expand-lg navbar-themed">
+
+  <a class="navbar-brand" href="/"><h5><b>Bradley Paoli</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <i class="fas fa-1x fa-bars text-themed"></i>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link active" href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      <a class="nav-item nav-link " href="https://github.com/bpaoli"><i class="fab fa-1x fa-github"></i></a>
+
+      
+
+      <span id="theme-toggler" class="nav-item nav-link" role="button" onclick="toggleTheme()"></span>
+    </div>
+  </div>
+
+</nav>
+    <div class="col-lg-10 mx-auto mt-5 markdown-body">
+  <h1 id="frog-jump">Frog Jump</h1>
+
+<p>This is a very simple frog jump game where a small sprite has to avoid objects floating across the screen. The project is designed for the Basys3 board over the VGA connection. The entire game is implemented in hardware on the FPGA using low-level logic.</p>
+
+<h2 id="code">Code</h2>
+<blockquote>
+  <p><strong>Note:</strong> Only the top-level module is shown here. The codebase for the entire project can be found at:<br />
+<a href="https://github.com/bpaoli/Frog-Jump-Game.git">https://github.com/bpaoli/Frog-Jump-Game.git</a></p>
+</blockquote>
+
+<pre><code class="language-systemverilog">module fifo_cdc_1r1w
+ #(parameter [31:0] width_p = 32
+  ,parameter [31:0] lg_depth_p = 8
+  )
+  (input [0:0] p_clk_i
+  ,input [0:0] p_reset_i
+  ,input [width_p - 1:0] p_data_i
+  ,input [0:0] p_valid_i
+  ,output [0:0] p_ready_o 
+
+  // Use reset to connect to respective producer/consumer sides, but
+  // do not cross the clock boundary. It is safe to assume that is
+  // handled elsewhere
+  ,input [0:0] c_clk_i
+  ,input [0:0] c_reset_i
+  ,output [0:0] c_valid_o 
+  ,output [width_p - 1:0] c_data_o 
+  ,input [0:0] c_ready_i
+  );
+   
+  wire [$clog2(lg_depth_p) - 1:0]wrptr_w;
+  wire[$clog2(lg_depth_p) - 1:0]rdptr_w;
+  wire[$clog2(lg_depth_p) - 1:0]ingrey_w;
+  wire[$clog2(lg_depth_p) - 1:0]outgrey_w;
+  logic [0:0]c_valid_l;
+  logic [0:0] p_ready_l;
+  assign c_valid_o = c_valid_l;
+  assign p_ready_o = p_ready_l;
+
+  // Write your code here
+  ram_1r1w_async
+  #(.width_p(width_p)
+  ,.depth_p(lg_depth_p))
+  fifo
+  (.clk_i(p_clk_i)
+  ,.reset_i(p_reset_i)
+
+  ,.wr_valid_i(p_valid_i&amp;p_ready_o)
+  ,.wr_data_i(p_data_i)
+  ,.wr_addr_i(wrptr_w)
+
+  ,.rd_addr_i(rdptr_w)
+  ,.rd_data_o(c_data_o)
+  );
+  
+  graycounter//write counter
+  #(.width_p($clog2(lg_depth_p)))
+  incount
+   (.clk_i(p_clk_i)
+   ,.reset_i(p_reset_i)
+   ,.up_i(p_valid_i &amp; p_ready_o)
+   ,.gray_o(ingrey_w));
+
+  graytobin
+  #(.width_p($clog2(lg_depth_p)))
+  readyoutandptr
+  (.gray_i(ingrey_w)
+  ,.binary_o(wrptr_w));
+
+  graytobin
+  #(.width_p($clog2(lg_depth_p)))
+  validout
+  (.gray_i(ingrey_w)
+  ,.binary_o(validdelay1_w));
+
+  wire [$clog2(lg_depth_p) - 1:0] validdelay1_w;
+  logic[$clog2(lg_depth_p) - 1:0] validflop1_l;
+  logic [$clog2(lg_depth_p) - 1:0] validflop2_l;
+
+always_ff @(posedge c_clk_i)begin//delay flip flop for the valid out signal
+  if(c_reset_i)begin
+    validflop1_l &lt;= 0;
+  end else begin
+    validflop1_l &lt;= validdelay1_w;
+  end
+end
+
+always_ff @(posedge c_clk_i)begin//delay flip flop for the valid out signal
+  if(c_reset_i)begin
+    validflop2_l &lt;= 0;
+  end else begin
+    validflop2_l &lt;= validflop1_l;
+  end
+end
+
+always_comb begin
+  c_valid_l = (validflop2_l !== rdptr_w);
+end
+
+  graycounter // read counter
+  #(.width_p($clog2(lg_depth_p)))
+  outcount
+   (.clk_i(c_clk_i)
+   ,.reset_i(c_reset_i)
+   ,.up_i(c_valid_o &amp; c_ready_i)
+   ,.gray_o(outgrey_w));
+
+  graytobin
+  #(.width_p($clog2(lg_depth_p)))
+  ValidOutAndptr
+  (.gray_i(outgrey_w)
+  ,.binary_o(rdptr_w));
+
+  wire [$clog2(lg_depth_p) - 1:0] readydelay1_w;
+  logic[$clog2(lg_depth_p) - 1:0] readyflop1_l;
+  logic [$clog2(lg_depth_p) - 1:0] readyflop2_l;
+
+  graytobin
+  #(.width_p($clog2(lg_depth_p)))
+  readyout
+  (.gray_i(outgrey_w)
+  ,.binary_o(readydelay1_w));
+
+  always_ff @(posedge p_clk_i)begin //delay flip flop for the ready out signal
+  if(p_reset_i)begin
+    readyflop1_l &lt;= 0;
+  end else begin
+    readyflop1_l &lt;= readydelay1_w;
+  end
+end
+
+always_ff @(posedge p_clk_i)begin //delay flip flop for the ready out signal
+  if(p_reset_i)begin
+    readyflop2_l &lt;= 0;
+  end else begin
+    readyflop2_l &lt;= readyflop1_l;
+  end
+end
+  
+always_comb begin
+  p_ready_l = (readyflop2_l !== (wrptr_w+1'b1));
+end
+endmodule
+</code></pre>
+
+</div>
+  </main>
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    <i class="fas fa-code"></i> with <i class="fas fa-heart"></i>
+    by <strong>Bradley Paoli</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center"><a class="social mx-1"  href="mailto:bradleypaoli@gmail.com"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#db4437'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.github.com/bpaoli"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#333333'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.instagram.com/brad_paoli"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#405de6'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-instagram fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.linkedin.com/in/bradley-paoli"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#007bb5'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a>
+
+</div></footer>
+
+  
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+</body>
+
+</html>

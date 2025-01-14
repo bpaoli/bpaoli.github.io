@@ -1,0 +1,39 @@
+- name: Embedded Systems
+  percentage: 80
+  color: danger
+
+- name: Logic Design
+  percentage: 50
+  color: primary
+
+- name: Network Programming
+  percentage: 90
+  color: warning
+
+- name: Database Management
+  percentage: 50
+  color: success
+
+- name: C/Embedded C
+  percentage: 70
+  color: info
+
+- name: MIPS (Assembly)
+  percentage: 40
+  color: light
+
+- name: Python
+  percentage: 90
+  color: primary
+
+- name: C++
+  percentage: 80
+  color: warning
+
+- name: PostgreSQL
+  percentage: 50
+  color: success
+
+- name: SystemVerilog
+  percentage: 40
+  color: info

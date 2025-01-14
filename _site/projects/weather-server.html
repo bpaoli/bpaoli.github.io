@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by yousinix
+  Free for personal and commercial use under the MIT license
+  https://github.com/yousinix/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  
+  
+  
+
+  
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Weather Server">
+  <meta property="og:description" content="A simple weather server using the ESP32C3 to read temperature and humidity data and transmit it to a Python-based server.">
+  <meta property="og:image" content="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZ6ET8j7wpLwE9dF_9CAD8jwzsKNHP8PvQNg&s">
+
+  <title>Weather Server</title>
+  <meta name="description" content="A simple weather server using the ESP32C3 to read temperature and humidity data and transmit it to a Python-based server.">
+
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Theme style -->
+  <script src="/assets/js/theme.js"></script>
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css">
+
+</head>
+
+
+<body class="h-100 d-flex flex-column">
+
+  <main class="flex-shrink-0 container mt-5">
+    <nav class="navbar navbar-expand-lg navbar-themed">
+
+  <a class="navbar-brand" href="/"><h5><b>Bradley Paoli</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <i class="fas fa-1x fa-bars text-themed"></i>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link active" href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      <a class="nav-item nav-link " href="https://github.com/bpaoli"><i class="fab fa-1x fa-github"></i></a>
+
+      
+
+      <span id="theme-toggler" class="nav-item nav-link" role="button" onclick="toggleTheme()"></span>
+    </div>
+  </div>
+
+</nav>
+    <div class="col-lg-10 mx-auto mt-5 markdown-body">
+  <h1 id="weather-server">Weather Server</h1>
+
+<p>This project showcases an embedded systems application that creates a simple <strong>weather server</strong> using an Espressif ESP32C3 microcontroller. The system reads temperature and humidity data from onboard sensors, processes the information, and sends it to a remote server for display. The implementation leverages the HTTP Wi-Fi framework provided by the ESP32 toolchain.</p>
+
+<blockquote>
+  <p><strong>Note:</strong> Only the top-level code is presented here. The complete project codebase can be accessed on GitHub:<br />
+<a href="https://github.com/bpaoli/simpleEsp32WeatherStation.git"><strong>simpleEsp32WeatherStation</strong></a></p>
+</blockquote>
+
+<h2 id="features">Features</h2>
+
+<ol>
+  <li><strong>Sensor Integration</strong>: Reads temperature and humidity data using onboard or external sensors.</li>
+  <li><strong>HTTP Server</strong>: Uses the ESP32C3 as an HTTP client to transmit sensor data over Wi-Fi.</li>
+  <li><strong>Remote Visualization</strong>: A Python-based server receives the data and displays it in real-time for user access.</li>
+  <li><strong>Efficient Design</strong>: Optimized for minimal power consumption and reliable data transfer.</li>
+</ol>
+
+<h2 id="tools-and-technologies">Tools and Technologies</h2>
+
+<ul>
+  <li><strong>Embedded C</strong>: Firmware development for the ESP32C3.</li>
+  <li><strong>ESP32C3 Microcontroller</strong>: Core platform for sensor interfacing and communication.</li>
+  <li><strong>Python</strong>: Backend server for receiving and visualizing weather data.</li>
+  <li><strong>HTTP Framework</strong>: Provides a lightweight communication protocol for data transfer.</li>
+</ul>
+
+<h2 id="project-overview">Project Overview</h2>
+
+<p>The <strong>Weather Server</strong> is built to demonstrate the following workflow:</p>
+
+<ol>
+  <li>The ESP32C3 collects temperature and humidity data from sensors.</li>
+  <li>The data is transmitted over Wi-Fi using HTTP requests.</li>
+  <li>A remote Python server receives and processes the data for display or storage.</li>
+</ol>
+
+<p>This setup is ideal for learning about IoT systems, including sensor integration, microcontroller programming, and network communication.</p>
+
+<h2 id="code-snippet">Code Snippet</h2>
+
+<p>Below is a brief example of how the ESP32C3 reads sensor data and sends it to the server:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/* HTTP GET Example using plain POSIX sockets
+
+   This example code is in the Public Domain (or CC0 licensed, at your option.)
+
+   Unless required by applicable law or agreed to in writing, this
+   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+   CONDITIONS OF ANY KIND, either express or implied.
+*/</span>
+<span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">"freertos/FreeRTOS.h"</span><span class="cp">
+#include</span> <span class="cpf">"freertos/task.h"</span><span class="cp">
+#include</span> <span class="cpf">"esp_system.h"</span><span class="cp">
+#include</span> <span class="cpf">"esp_wifi.h"</span><span class="cp">
+#include</span> <span class="cpf">"esp_event.h"</span><span class="cp">
+#include</span> <span class="cpf">"esp_log.h"</span><span class="cp">
+#include</span> <span class="cpf">"nvs_flash.h"</span><span class="cp">
+#include</span> <span class="cpf">"protocol_examples_common.h"</span><span class="cp">
+</span>
+<span class="cp">#include</span> <span class="cpf">"lwip/err.h"</span><span class="cp">
+#include</span> <span class="cpf">"lwip/sockets.h"</span><span class="cp">
+#include</span> <span class="cpf">"lwip/sys.h"</span><span class="cp">
+#include</span> <span class="cpf">"lwip/netdb.h"</span><span class="cp">
+#include</span> <span class="cpf">"lwip/dns.h"</span><span class="cp">
+#include</span> <span class="cpf">"sdkconfig.h"</span><span class="cp">
+#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span>
+<span class="cp">#include</span> <span class="cpf">&lt;inttypes.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">"driver/i2c.h"</span><span class="cp">
+</span>
+<span class="cp">#define I2C_MASTER_SCL_IO 8
+#define I2C_MASTER_SDA_IO 10
+#define I2C_MASTER_NUM I2C_NUM_0
+#define I2C_MASTER_FREQ_HZ 400000
+#define SHTC3_ADDR 0x70
+</span>
+<span class="cm">/* Constants that aren't configurable in menuconfig */</span>
+<span class="cp">#define WEB_SERVER "192.168.251.115"
+#define WEB_PORT "1234"
+#define WEB_PATH "/weather"
+#define LOCATION "Santa Cruz"
+</span>
+<span class="k">static</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">TAG</span> <span class="o">=</span> <span class="s">"example"</span><span class="p">;</span>
+
+<span class="k">static</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">REQUEST</span> <span class="o">=</span> <span class="s">"GET "</span> <span class="n">WEB_PATH</span> <span class="s">" HTTP/1.0</span><span class="se">\r\n</span><span class="s">"</span>
+    <span class="s">"Host: "</span><span class="n">WEB_SERVER</span><span class="s">":"</span><span class="n">WEB_PORT</span><span class="s">"</span><span class="se">\r\n</span><span class="s">"</span>
+    <span class="s">"User-Agent: esp-idf/1.0 esp32</span><span class="se">\r\n</span><span class="s">"</span>
+    <span class="s">"</span><span class="se">\r\n</span><span class="s">"</span><span class="p">;</span>
+
+<span class="kt">uint8_t</span> <span class="nf">shtc3_read_temperature</span><span class="p">(</span><span class="kt">uint16_t</span><span class="o">*</span> <span class="n">temperature</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">uint8_t</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mh">0x78</span><span class="p">,</span> <span class="mh">0x66</span><span class="p">};</span>
+    <span class="n">i2c_cmd_handle_t</span> <span class="n">cmd</span> <span class="o">=</span> <span class="n">i2c_cmd_link_create</span><span class="p">();</span>
+    <span class="n">i2c_master_start</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+    <span class="n">i2c_master_write_byte</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="p">(</span><span class="n">SHTC3_ADDR</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="n">I2C_MASTER_WRITE</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
+    <span class="n">i2c_master_write</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
+    <span class="n">i2c_master_stop</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+    <span class="n">esp_err_t</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">i2c_master_cmd_begin</span><span class="p">(</span><span class="n">I2C_MASTER_NUM</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="mi">1000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+    <span class="n">i2c_cmd_link_delete</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">!=</span> <span class="n">ESP_OK</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">vTaskDelay</span><span class="p">(</span><span class="mi">20</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span> <span class="c1">// Wait for the measurement to complete</span>
+
+    <span class="kt">uint8_t</span> <span class="n">temperature_data</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="n">i2c_cmd_link_create</span><span class="p">();</span>
+    <span class="n">i2c_master_start</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+    <span class="n">i2c_master_write_byte</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="p">(</span><span class="n">SHTC3_ADDR</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="n">I2C_MASTER_READ</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
+    <span class="n">i2c_master_read</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">temperature_data</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">I2C_MASTER_LAST_NACK</span><span class="p">);</span>
+    <span class="n">i2c_master_stop</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">i2c_master_cmd_begin</span><span class="p">(</span><span class="n">I2C_MASTER_NUM</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="mi">1000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+    <span class="n">i2c_cmd_link_delete</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">!=</span> <span class="n">ESP_OK</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="o">*</span><span class="n">temperature</span> <span class="o">=</span> <span class="p">(</span><span class="n">temperature_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">|</span> <span class="n">temperature_data</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+    <span class="k">return</span> <span class="n">ESP_OK</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">uint8_t</span> <span class="nf">shtc3_read_humidity</span><span class="p">(</span><span class="kt">uint16_t</span><span class="o">*</span> <span class="n">humidity</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">uint8_t</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mh">0x78</span><span class="p">,</span> <span class="mh">0x66</span><span class="p">};</span>
+    <span class="n">i2c_cmd_handle_t</span> <span class="n">cmd</span> <span class="o">=</span> <span class="n">i2c_cmd_link_create</span><span class="p">();</span>
+    <span class="n">i2c_master_start</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+    <span class="n">i2c_master_write_byte</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="p">(</span><span class="n">SHTC3_ADDR</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="n">I2C_MASTER_WRITE</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
+    <span class="n">i2c_master_write</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
+    <span class="n">i2c_master_stop</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+    <span class="n">esp_err_t</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">i2c_master_cmd_begin</span><span class="p">(</span><span class="n">I2C_MASTER_NUM</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="mi">1000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+    <span class="n">i2c_cmd_link_delete</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">!=</span> <span class="n">ESP_OK</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">vTaskDelay</span><span class="p">(</span><span class="mi">20</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span> <span class="c1">// Wait for the measurement to complete</span>
+
+    <span class="kt">uint8_t</span> <span class="n">humidity_data</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="n">i2c_cmd_link_create</span><span class="p">();</span>
+    <span class="n">i2c_master_start</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+    <span class="n">i2c_master_write_byte</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="p">(</span><span class="n">SHTC3_ADDR</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="n">I2C_MASTER_READ</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
+    <span class="n">i2c_master_read</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">humidity_data</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">I2C_MASTER_LAST_NACK</span><span class="p">);</span>
+    <span class="n">i2c_master_stop</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">i2c_master_cmd_begin</span><span class="p">(</span><span class="n">I2C_MASTER_NUM</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="mi">1000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+    <span class="n">i2c_cmd_link_delete</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">!=</span> <span class="n">ESP_OK</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="o">*</span><span class="n">humidity</span> <span class="o">=</span> <span class="p">(</span><span class="n">humidity_data</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">|</span> <span class="n">humidity_data</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
+    <span class="k">return</span> <span class="n">ESP_OK</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">static</span> <span class="kt">void</span> <span class="nf">http_get_task</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">pvParameters</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">const</span> <span class="k">struct</span> <span class="n">addrinfo</span> <span class="n">hints</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">.</span><span class="n">ai_family</span> <span class="o">=</span> <span class="n">AF_INET</span><span class="p">,</span>
+        <span class="p">.</span><span class="n">ai_socktype</span> <span class="o">=</span> <span class="n">SOCK_STREAM</span><span class="p">,</span>
+    <span class="p">};</span>
+    <span class="k">struct</span> <span class="n">addrinfo</span> <span class="o">*</span><span class="n">res</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">in_addr</span> <span class="o">*</span><span class="n">addr</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">s</span><span class="p">,</span> <span class="n">r</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="n">recv_buf</span><span class="p">[</span><span class="mi">64</span><span class="p">];</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kt">int</span> <span class="n">err</span> <span class="o">=</span> <span class="n">getaddrinfo</span><span class="p">(</span><span class="n">WEB_SERVER</span><span class="p">,</span> <span class="n">WEB_PORT</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">hints</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">res</span><span class="p">);</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">err</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">res</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"DNS lookup failed err=%d res=%p"</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">res</span><span class="p">);</span>
+            <span class="n">vTaskDelay</span><span class="p">(</span><span class="mi">1000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="cm">/* Code to print the resolved IP.
+
+           Note: inet_ntoa is non-reentrant, look at ipaddr_ntoa_r for "real" code */</span>
+        <span class="n">addr</span> <span class="o">=</span> <span class="o">&amp;</span><span class="p">((</span><span class="k">struct</span> <span class="n">sockaddr_in</span> <span class="o">*</span><span class="p">)</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_addr</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">sin_addr</span><span class="p">;</span>
+        <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"DNS lookup succeeded. IP=%s"</span><span class="p">,</span> <span class="n">inet_ntoa</span><span class="p">(</span><span class="o">*</span><span class="n">addr</span><span class="p">));</span>
+
+        <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_family</span><span class="p">,</span> <span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_socktype</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">s</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... Failed to allocate socket."</span><span class="p">);</span>
+            <span class="n">freeaddrinfo</span><span class="p">(</span><span class="n">res</span><span class="p">);</span>
+            <span class="n">vTaskDelay</span><span class="p">(</span><span class="mi">1000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... allocated socket"</span><span class="p">);</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">connect</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_addr</span><span class="p">,</span> <span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_addrlen</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... socket connect failed errno=%d"</span><span class="p">,</span> <span class="n">errno</span><span class="p">);</span>
+            <span class="n">close</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+            <span class="n">freeaddrinfo</span><span class="p">(</span><span class="n">res</span><span class="p">);</span>
+            <span class="n">vTaskDelay</span><span class="p">(</span><span class="mi">4000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... connected"</span><span class="p">);</span>
+        <span class="n">freeaddrinfo</span><span class="p">(</span><span class="n">res</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">write</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">REQUEST</span><span class="p">,</span> <span class="n">strlen</span><span class="p">(</span><span class="n">REQUEST</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... socket send failed"</span><span class="p">);</span>
+            <span class="n">close</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+            <span class="n">vTaskDelay</span><span class="p">(</span><span class="mi">4000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... socket send success"</span><span class="p">);</span>
+
+        <span class="k">struct</span> <span class="n">timeval</span> <span class="n">receiving_timeout</span><span class="p">;</span>
+        <span class="n">receiving_timeout</span><span class="p">.</span><span class="n">tv_sec</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+        <span class="n">receiving_timeout</span><span class="p">.</span><span class="n">tv_usec</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">SOL_SOCKET</span><span class="p">,</span> <span class="n">SO_RCVTIMEO</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">receiving_timeout</span><span class="p">,</span>
+                <span class="k">sizeof</span><span class="p">(</span><span class="n">receiving_timeout</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... failed to set socket receiving timeout"</span><span class="p">);</span>
+            <span class="n">close</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+            <span class="n">vTaskDelay</span><span class="p">(</span><span class="mi">4000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... set socket receiving timeout success"</span><span class="p">);</span>
+
+        <span class="cm">/* Read HTTP response */</span>
+        <span class="k">do</span> <span class="p">{</span>
+            <span class="n">bzero</span><span class="p">(</span><span class="n">recv_buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">recv_buf</span><span class="p">));</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">recv_buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">recv_buf</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+            <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">r</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">putchar</span><span class="p">(</span><span class="n">recv_buf</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+            <span class="p">}</span>
+        <span class="p">}</span> <span class="k">while</span><span class="p">(</span><span class="n">r</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">);</span>
+
+        <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... done reading from socket. Last read return=%d errno=%d."</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">errno</span><span class="p">);</span>
+        <span class="n">close</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">countdown</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="n">countdown</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">countdown</span><span class="o">--</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"%d... "</span><span class="p">,</span> <span class="n">countdown</span><span class="p">);</span>
+            <span class="n">vTaskDelay</span><span class="p">(</span><span class="mi">1000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"Starting again!"</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="k">static</span> <span class="kt">void</span> <span class="nf">http_post_task</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">pvParameters</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">const</span> <span class="k">struct</span> <span class="n">addrinfo</span> <span class="n">hints</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">.</span><span class="n">ai_family</span> <span class="o">=</span> <span class="n">AF_INET</span><span class="p">,</span>
+        <span class="p">.</span><span class="n">ai_socktype</span> <span class="o">=</span> <span class="n">SOCK_STREAM</span><span class="p">,</span>
+    <span class="p">};</span>
+    <span class="k">struct</span> <span class="n">addrinfo</span> <span class="o">*</span><span class="n">res</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">in_addr</span> <span class="o">*</span><span class="n">addr</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">s</span><span class="p">,</span> <span class="n">r</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="n">recv_buf</span><span class="p">[</span><span class="mi">64</span><span class="p">];</span>
+
+    <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kt">int</span> <span class="n">err</span> <span class="o">=</span> <span class="n">getaddrinfo</span><span class="p">(</span><span class="n">WEB_SERVER</span><span class="p">,</span> <span class="n">WEB_PORT</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">hints</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">res</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">err</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">res</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"DNS lookup failed err=%d res=%p"</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">res</span><span class="p">);</span>
+            <span class="n">vTaskDelay</span><span class="p">(</span><span class="mi">1000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="cm">/* Code to print the resolved IP.
+           Note: inet_ntoa is non-reentrant, look at ipaddr_ntoa_r for "real" code */</span>
+        <span class="n">addr</span> <span class="o">=</span> <span class="o">&amp;</span><span class="p">((</span><span class="k">struct</span> <span class="n">sockaddr_in</span> <span class="o">*</span><span class="p">)</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_addr</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">sin_addr</span><span class="p">;</span>
+        <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"DNS lookup succeeded. IP=%s"</span><span class="p">,</span> <span class="n">inet_ntoa</span><span class="p">(</span><span class="o">*</span><span class="n">addr</span><span class="p">));</span>
+
+        <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_family</span><span class="p">,</span> <span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_socktype</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">s</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... Failed to allocate socket."</span><span class="p">);</span>
+            <span class="n">freeaddrinfo</span><span class="p">(</span><span class="n">res</span><span class="p">);</span>
+            <span class="n">vTaskDelay</span><span class="p">(</span><span class="mi">1000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... allocated socket"</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">connect</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_addr</span><span class="p">,</span> <span class="n">res</span><span class="o">-&gt;</span><span class="n">ai_addrlen</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... socket connect failed errno=%d"</span><span class="p">,</span> <span class="n">errno</span><span class="p">);</span>
+            <span class="n">close</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+            <span class="n">freeaddrinfo</span><span class="p">(</span><span class="n">res</span><span class="p">);</span>
+            <span class="n">vTaskDelay</span><span class="p">(</span><span class="mi">4000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... connected"</span><span class="p">);</span>
+        <span class="n">freeaddrinfo</span><span class="p">(</span><span class="n">res</span><span class="p">);</span>
+
+        <span class="kt">uint16_t</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">humidity</span><span class="p">;</span>
+        <span class="n">shtc3_read_temperature</span><span class="p">(</span><span class="o">&amp;</span><span class="n">temperature</span><span class="p">);</span>
+        <span class="n">shtc3_read_humidity</span><span class="p">(</span><span class="o">&amp;</span><span class="n">humidity</span><span class="p">);</span>
+        <span class="kt">float</span> <span class="n">temperature_celsius</span> <span class="o">=</span> <span class="p">((.</span><span class="mi">45</span><span class="o">+</span><span class="mi">175</span><span class="o">*</span><span class="p">(</span><span class="n">temperature</span> <span class="o">/</span> <span class="mi">65535</span><span class="p">.</span><span class="mi">0</span><span class="p">))</span> <span class="o">-</span> <span class="mi">32</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">56</span><span class="p">);</span>
+        <span class="kt">float</span> <span class="n">humidity_percentage</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span> <span class="p">(</span><span class="n">humidity</span> <span class="o">/</span> <span class="mi">65535</span><span class="p">.</span><span class="mi">0</span><span class="p">);</span>
+
+        <span class="n">printf</span><span class="p">(</span><span class="s">"Temperature is %.2fC with a %.2f%% humidity</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">temperature_celsius</span><span class="p">,</span> <span class="n">humidity_percentage</span><span class="p">);</span>
+        
+
+        
+
+        <span class="c1">// Modified request for HTTP POST</span>
+        <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">post_request</span> <span class="o">=</span> <span class="s">"POST "</span> <span class="n">WEB_PATH</span> <span class="s">" HTTP/1.1</span><span class="se">\r\n</span><span class="s">"</span>
+                                   <span class="s">"Host: "</span><span class="n">WEB_SERVER</span><span class="s">":"</span><span class="n">WEB_PORT</span><span class="s">"</span><span class="se">\r\n</span><span class="s">"</span>
+                                   <span class="s">"User-Agent: curl/7.81.0</span><span class="se">\r\n</span><span class="s">"</span>
+                                   <span class="s">"Accept: */*</span><span class="se">\r\n</span><span class="s">"</span>
+                                   <span class="s">"Content-Type: text/plain; charset=utf-8</span><span class="se">\r\n</span><span class="s">"</span>
+                                   <span class="s">"Content-Length: %d</span><span class="se">\r\n\r\n</span><span class="s">"</span>
+                                   <span class="s">"Santa Cruz: Temperature= %.2fC Humidity= %.2f%%"</span><span class="p">;</span>
+        
+        <span class="kt">char</span> <span class="n">request_buffer</span><span class="p">[</span><span class="mi">512</span><span class="p">];</span>  <span class="c1">// Increase the buffer size as needed</span>
+        <span class="n">snprintf</span><span class="p">(</span><span class="n">request_buffer</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">request_buffer</span><span class="p">),</span> <span class="n">post_request</span><span class="p">,</span>
+            <span class="p">(</span><span class="kt">int</span><span class="p">)(</span><span class="n">strlen</span><span class="p">(</span><span class="s">"Santa Cruz: Temperature= C Humidity= %%"</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">float</span><span class="p">)),</span>
+            <span class="n">temperature_celsius</span><span class="p">,</span> <span class="n">humidity_percentage</span><span class="p">);</span>
+
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">write</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">request_buffer</span><span class="p">,</span> <span class="n">strlen</span><span class="p">(</span><span class="n">request_buffer</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... socket send failed"</span><span class="p">);</span>
+            <span class="n">close</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+            <span class="n">vTaskDelay</span><span class="p">(</span><span class="mi">4000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... socket send success"</span><span class="p">);</span>
+
+        <span class="k">struct</span> <span class="n">timeval</span> <span class="n">receiving_timeout</span><span class="p">;</span>
+        <span class="n">receiving_timeout</span><span class="p">.</span><span class="n">tv_sec</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+        <span class="n">receiving_timeout</span><span class="p">.</span><span class="n">tv_usec</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">setsockopt</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">SOL_SOCKET</span><span class="p">,</span> <span class="n">SO_RCVTIMEO</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">receiving_timeout</span><span class="p">,</span>
+                       <span class="k">sizeof</span><span class="p">(</span><span class="n">receiving_timeout</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... failed to set socket receiving timeout"</span><span class="p">);</span>
+            <span class="n">close</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+            <span class="n">vTaskDelay</span><span class="p">(</span><span class="mi">4000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... set socket receiving timeout success"</span><span class="p">);</span>
+
+        <span class="cm">/* Read HTTP response */</span>
+        <span class="k">do</span> <span class="p">{</span>
+            <span class="n">bzero</span><span class="p">(</span><span class="n">recv_buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">recv_buf</span><span class="p">));</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">recv_buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">recv_buf</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+            <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">r</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">putchar</span><span class="p">(</span><span class="n">recv_buf</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+            <span class="p">}</span>
+        <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="n">r</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">);</span>
+
+        <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"... done reading from socket. Last read return=%d errno=%d."</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">errno</span><span class="p">);</span>
+        <span class="n">close</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">countdown</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="n">countdown</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">countdown</span><span class="o">--</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"%d... "</span><span class="p">,</span> <span class="n">countdown</span><span class="p">);</span>
+            <span class="n">vTaskDelay</span><span class="p">(</span><span class="mi">1000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">TAG</span><span class="p">,</span> <span class="s">"Starting again!"</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">starti2c</span><span class="p">(){</span>
+    <span class="n">i2c_config_t</span> <span class="n">conf</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">I2C_MODE_MASTER</span><span class="p">,</span>
+        <span class="p">.</span><span class="n">sda_io_num</span> <span class="o">=</span> <span class="n">I2C_MASTER_SDA_IO</span><span class="p">,</span>
+        <span class="p">.</span><span class="n">sda_pullup_en</span> <span class="o">=</span> <span class="n">GPIO_PULLUP_ENABLE</span><span class="p">,</span>
+        <span class="p">.</span><span class="n">scl_io_num</span> <span class="o">=</span> <span class="n">I2C_MASTER_SCL_IO</span><span class="p">,</span>
+        <span class="p">.</span><span class="n">scl_pullup_en</span> <span class="o">=</span> <span class="n">GPIO_PULLUP_ENABLE</span><span class="p">,</span>
+        <span class="p">.</span><span class="n">master</span><span class="p">.</span><span class="n">clk_speed</span> <span class="o">=</span> <span class="n">I2C_MASTER_FREQ_HZ</span><span class="p">,</span>
+    <span class="p">};</span>
+    <span class="n">i2c_param_config</span><span class="p">(</span><span class="n">I2C_MASTER_NUM</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">conf</span><span class="p">);</span>
+    <span class="n">i2c_driver_install</span><span class="p">(</span><span class="n">I2C_MASTER_NUM</span><span class="p">,</span> <span class="n">conf</span><span class="p">.</span><span class="n">mode</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="kt">void</span> <span class="nf">app_main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">starti2c</span><span class="p">();</span>
+
+    <span class="n">ESP_ERROR_CHECK</span><span class="p">(</span> <span class="n">nvs_flash_init</span><span class="p">()</span> <span class="p">);</span>
+    <span class="n">ESP_ERROR_CHECK</span><span class="p">(</span><span class="n">esp_netif_init</span><span class="p">());</span>
+    <span class="n">ESP_ERROR_CHECK</span><span class="p">(</span><span class="n">esp_event_loop_create_default</span><span class="p">());</span>
+
+    <span class="cm">/* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
+     * Read "Establishing Wi-Fi or Ethernet Connection" section in
+     * examples/protocols/README.md for more information about this function.
+     */</span>
+    <span class="n">ESP_ERROR_CHECK</span><span class="p">(</span><span class="n">example_connect</span><span class="p">());</span>
+    <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        
+        <span class="n">xTaskCreate</span><span class="p">(</span><span class="o">&amp;</span><span class="n">http_post_task</span><span class="p">,</span> <span class="s">"http_post_task"</span><span class="p">,</span> <span class="mi">4096</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+        <span class="n">vTaskDelay</span><span class="p">(</span><span class="n">pdMS_TO_TICKS</span><span class="p">(</span><span class="mi">5000</span><span class="p">));</span> <span class="c1">// 2-second delay</span>
+    <span class="p">}</span>
+    
+<span class="p">}</span>
+</code></pre></div></div>
+
+</div>
+  </main>
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    <i class="fas fa-code"></i> with <i class="fas fa-heart"></i>
+    by <strong>Bradley Paoli</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center"><a class="social mx-1"  href="mailto:bradleypaoli@gmail.com"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#db4437'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.github.com/bpaoli"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#333333'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.instagram.com/brad_paoli"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#405de6'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-instagram fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.linkedin.com/in/bradley-paoli"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#007bb5'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a>
+
+</div></footer>
+
+  
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+</body>
+
+</html>

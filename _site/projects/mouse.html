@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by yousinix
+  Free for personal and commercial use under the MIT license
+  https://github.com/yousinix/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  
+  
+  
+
+  
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Gyroscopic Mouse">
+  <meta property="og:description" content="A Bluetooth mouse project using an accelerometer and Bluetooth modules on an ESP32C3.">
+  <meta property="og:image" content="https://microsoft.github.io/jacdac-docs/images/devices/espressif/esp32c3rustdevkitv12a.catalog.jpg">
+
+  <title>Gyroscopic Mouse</title>
+  <meta name="description" content="A Bluetooth mouse project using an accelerometer and Bluetooth modules on an ESP32C3.">
+
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Theme style -->
+  <script src="/assets/js/theme.js"></script>
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css">
+
+</head>
+
+
+<body class="h-100 d-flex flex-column">
+
+  <main class="flex-shrink-0 container mt-5">
+    <nav class="navbar navbar-expand-lg navbar-themed">
+
+  <a class="navbar-brand" href="/"><h5><b>Bradley Paoli</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <i class="fas fa-1x fa-bars text-themed"></i>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link active" href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      <a class="nav-item nav-link " href="https://github.com/bpaoli"><i class="fab fa-1x fa-github"></i></a>
+
+      
+
+      <span id="theme-toggler" class="nav-item nav-link" role="button" onclick="toggleTheme()"></span>
+    </div>
+  </div>
+
+</nav>
+    <div class="col-lg-10 mx-auto mt-5 markdown-body">
+  <h1 id="gyroscopic-mouse">Gyroscopic Mouse</h1>
+
+<p>This project demonstrates an embedded systems application to create a Bluetooth mouse leveraging the accelerometer on an Espressif ESP32C3. The implementation is built on the Bluetooth framework provided in the ESP32 toolchain. <strong>Bluetooth Low Energy (BLE)</strong> is utilized, as the high transmission rates and feature-rich profiles of other Bluetooth versions were not necessary for the project’s intended functionality.</p>
+
+<blockquote>
+  <p><strong>Note:</strong> This documentation includes only the main project code. The full codebase and implementation details are available on GitHub:<br />
+<a href="https://github.com/bpaoli/esp32c3AccelMouse.git"><strong>esp32c3AccelMouse</strong></a></p>
+</blockquote>
+
+<h2 id="features">Features</h2>
+
+<ol>
+  <li><strong>Accelerometer Integration</strong>: Real-time tracking of motion and tilt to translate physical movement into mouse input.</li>
+  <li><strong>Bluetooth Low Energy (BLE)</strong>: Enables seamless connectivity with minimal power consumption.</li>
+  <li><strong>ESP32C3 Microcontroller</strong>: Utilizes the ESP32C3’s onboard features for efficient computation and communication.</li>
+  <li><strong>Customizable Firmware</strong>: The code can be tailored to specific input patterns or sensitivity needs.</li>
+</ol>
+
+<h2 id="project-overview">Project Overview</h2>
+
+<p>The <strong>Gyroscopic Mouse</strong> project uses the ESP32C3’s Bluetooth capabilities to communicate with a host device. The accelerometer provides motion data, which is processed and converted into mouse input. The design focuses on simplicity and power efficiency, making it ideal for lightweight and portable applications.</p>
+
+<h2 id="key-code-snippet">Key Code Snippet</h2>
+
+<p>Below is a brief snippet showcasing how the project handles accelerometer data and transmits it via BLE:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/*
+ * SPDX-FileCopyrightText: 2021-2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Unlicense OR CC0-1.0
+ */</span>
+
+<span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;stdbool.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">"freertos/FreeRTOS.h"</span><span class="cp">
+#include</span> <span class="cpf">"freertos/task.h"</span><span class="cp">
+#include</span> <span class="cpf">"freertos/event_groups.h"</span><span class="cp">
+#include</span> <span class="cpf">"esp_system.h"</span><span class="cp">
+#include</span> <span class="cpf">"esp_wifi.h"</span><span class="cp">
+#include</span> <span class="cpf">"esp_event.h"</span><span class="cp">
+#include</span> <span class="cpf">"esp_log.h"</span><span class="cp">
+#include</span> <span class="cpf">"nvs_flash.h"</span><span class="cp">
+#include</span> <span class="cpf">"esp_bt.h"</span><span class="cp">
+</span>
+<span class="cp">#include</span> <span class="cpf">"esp_hidd_prf_api.h"</span><span class="cp">
+#include</span> <span class="cpf">"esp_bt_defs.h"</span><span class="cp">
+#include</span> <span class="cpf">"esp_gap_ble_api.h"</span><span class="cp">
+#include</span> <span class="cpf">"esp_gatts_api.h"</span><span class="cp">
+#include</span> <span class="cpf">"esp_gatt_defs.h"</span><span class="cp">
+#include</span> <span class="cpf">"esp_bt_main.h"</span><span class="cp">
+#include</span> <span class="cpf">"esp_bt_device.h"</span><span class="cp">
+#include</span> <span class="cpf">"driver/gpio.h"</span><span class="cp">
+#include</span> <span class="cpf">"hid_dev.h"</span><span class="cp">
+</span>
+<span class="cp">#include</span> <span class="cpf">&lt;stdint.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">"driver/i2c.h"</span><span class="cp">
+</span>
+<span class="cp">#define I2C_MASTER_SCL_IO 8
+#define I2C_MASTER_SDA_IO 10
+#define I2C_MASTER_NUM I2C_NUM_0
+#define I2C_MASTER_FREQ_HZ 400000
+</span>
+<span class="c1">//static const char *TAG = "gyro.c";</span>
+<span class="k">static</span> <span class="kt">uint8_t</span> <span class="n">imu_address</span> <span class="o">=</span> <span class="mh">0x68</span><span class="p">;</span>
+<span class="cp">#define HID_DEMO_TAG "HID_DEMO"
+</span>
+
+<span class="k">static</span> <span class="kt">uint16_t</span> <span class="n">hid_conn_id</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="k">static</span> <span class="n">bool</span> <span class="n">sec_conn</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+<span class="k">static</span> <span class="n">bool</span> <span class="n">send_volum_up</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+<span class="cp">#define CHAR_DECLARATION_SIZE   (sizeof(uint8_t))
+</span>
+<span class="k">static</span> <span class="kt">void</span> <span class="nf">hidd_event_callback</span><span class="p">(</span><span class="n">esp_hidd_cb_event_t</span> <span class="n">event</span><span class="p">,</span> <span class="n">esp_hidd_cb_param_t</span> <span class="o">*</span><span class="n">param</span><span class="p">);</span>
+
+<span class="cp">#define HIDD_DEVICE_NAME            "Why_God?"
+</span><span class="k">static</span> <span class="kt">uint8_t</span> <span class="n">hidd_service_uuid128</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="cm">/* LSB &lt;--------------------------------------------------------------------------------&gt; MSB */</span>
+    <span class="c1">//first uuid, 16bit, [12],[13] is the value</span>
+    <span class="mh">0xfb</span><span class="p">,</span> <span class="mh">0x34</span><span class="p">,</span> <span class="mh">0x9b</span><span class="p">,</span> <span class="mh">0x5f</span><span class="p">,</span> <span class="mh">0x80</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x80</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x10</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x12</span><span class="p">,</span> <span class="mh">0x18</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span>
+<span class="p">};</span>
+
+<span class="k">static</span> <span class="n">esp_ble_adv_data_t</span> <span class="n">hidd_adv_data</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">.</span><span class="n">set_scan_rsp</span> <span class="o">=</span> <span class="nb">false</span><span class="p">,</span>
+    <span class="p">.</span><span class="n">include_name</span> <span class="o">=</span> <span class="nb">true</span><span class="p">,</span>
+    <span class="p">.</span><span class="n">include_txpower</span> <span class="o">=</span> <span class="nb">true</span><span class="p">,</span>
+    <span class="p">.</span><span class="n">min_interval</span> <span class="o">=</span> <span class="mh">0x0006</span><span class="p">,</span> <span class="c1">//slave connection min interval, Time = min_interval * 1.25 msec</span>
+    <span class="p">.</span><span class="n">max_interval</span> <span class="o">=</span> <span class="mh">0x0010</span><span class="p">,</span> <span class="c1">//slave connection max interval, Time = max_interval * 1.25 msec</span>
+    <span class="p">.</span><span class="n">appearance</span> <span class="o">=</span> <span class="mh">0x03c0</span><span class="p">,</span>       <span class="c1">//HID Generic,</span>
+    <span class="p">.</span><span class="n">manufacturer_len</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">.</span><span class="n">p_manufacturer_data</span> <span class="o">=</span>  <span class="nb">NULL</span><span class="p">,</span>
+    <span class="p">.</span><span class="n">service_data_len</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">.</span><span class="n">p_service_data</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">,</span>
+    <span class="p">.</span><span class="n">service_uuid_len</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">hidd_service_uuid128</span><span class="p">),</span>
+    <span class="p">.</span><span class="n">p_service_uuid</span> <span class="o">=</span> <span class="n">hidd_service_uuid128</span><span class="p">,</span>
+    <span class="p">.</span><span class="n">flag</span> <span class="o">=</span> <span class="mh">0x6</span><span class="p">,</span>
+<span class="p">};</span>
+
+<span class="k">static</span> <span class="n">esp_ble_adv_params_t</span> <span class="n">hidd_adv_params</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">.</span><span class="n">adv_int_min</span>        <span class="o">=</span> <span class="mh">0x20</span><span class="p">,</span>
+    <span class="p">.</span><span class="n">adv_int_max</span>        <span class="o">=</span> <span class="mh">0x30</span><span class="p">,</span>
+    <span class="p">.</span><span class="n">adv_type</span>           <span class="o">=</span> <span class="n">ADV_TYPE_IND</span><span class="p">,</span>
+    <span class="p">.</span><span class="n">own_addr_type</span>      <span class="o">=</span> <span class="n">BLE_ADDR_TYPE_PUBLIC</span><span class="p">,</span>
+    <span class="c1">//.peer_addr            =</span>
+    <span class="c1">//.peer_addr_type       =</span>
+    <span class="p">.</span><span class="n">channel_map</span>        <span class="o">=</span> <span class="n">ADV_CHNL_ALL</span><span class="p">,</span>
+    <span class="p">.</span><span class="n">adv_filter_policy</span> <span class="o">=</span> <span class="n">ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY</span><span class="p">,</span>
+<span class="p">};</span>
+
+
+<span class="k">static</span> <span class="kt">void</span> <span class="nf">hidd_event_callback</span><span class="p">(</span><span class="n">esp_hidd_cb_event_t</span> <span class="n">event</span><span class="p">,</span> <span class="n">esp_hidd_cb_param_t</span> <span class="o">*</span><span class="n">param</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">switch</span><span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">case</span> <span class="n">ESP_HIDD_EVENT_REG_FINISH</span><span class="p">:</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">param</span><span class="o">-&gt;</span><span class="n">init_finish</span><span class="p">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">ESP_HIDD_INIT_OK</span><span class="p">)</span> <span class="p">{</span>
+                <span class="c1">//esp_bd_addr_t rand_addr = {0x04,0x11,0x11,0x11,0x11,0x05};</span>
+                <span class="n">esp_ble_gap_set_device_name</span><span class="p">(</span><span class="n">HIDD_DEVICE_NAME</span><span class="p">);</span>
+                <span class="n">esp_ble_gap_config_adv_data</span><span class="p">(</span><span class="o">&amp;</span><span class="n">hidd_adv_data</span><span class="p">);</span>
+
+            <span class="p">}</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">case</span> <span class="n">ESP_BAT_EVENT_REG</span><span class="p">:</span> <span class="p">{</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">case</span> <span class="n">ESP_HIDD_EVENT_DEINIT_FINISH</span><span class="p">:</span>
+	     <span class="k">break</span><span class="p">;</span>
+		<span class="k">case</span> <span class="n">ESP_HIDD_EVENT_BLE_CONNECT</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">HID_DEMO_TAG</span><span class="p">,</span> <span class="s">"ESP_HIDD_EVENT_BLE_CONNECT"</span><span class="p">);</span>
+            <span class="n">hid_conn_id</span> <span class="o">=</span> <span class="n">param</span><span class="o">-&gt;</span><span class="n">connect</span><span class="p">.</span><span class="n">conn_id</span><span class="p">;</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">case</span> <span class="n">ESP_HIDD_EVENT_BLE_DISCONNECT</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">sec_conn</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+            <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">HID_DEMO_TAG</span><span class="p">,</span> <span class="s">"ESP_HIDD_EVENT_BLE_DISCONNECT"</span><span class="p">);</span>
+            <span class="n">esp_ble_gap_start_advertising</span><span class="p">(</span><span class="o">&amp;</span><span class="n">hidd_adv_params</span><span class="p">);</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">case</span> <span class="n">ESP_HIDD_EVENT_BLE_VENDOR_REPORT_WRITE_EVT</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">HID_DEMO_TAG</span><span class="p">,</span> <span class="s">"%s, ESP_HIDD_EVENT_BLE_VENDOR_REPORT_WRITE_EVT"</span><span class="p">,</span> <span class="n">__func__</span><span class="p">);</span>
+            <span class="n">ESP_LOG_BUFFER_HEX</span><span class="p">(</span><span class="n">HID_DEMO_TAG</span><span class="p">,</span> <span class="n">param</span><span class="o">-&gt;</span><span class="n">vendor_write</span><span class="p">.</span><span class="n">data</span><span class="p">,</span> <span class="n">param</span><span class="o">-&gt;</span><span class="n">vendor_write</span><span class="p">.</span><span class="n">length</span><span class="p">);</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">case</span> <span class="n">ESP_HIDD_EVENT_BLE_LED_REPORT_WRITE_EVT</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">HID_DEMO_TAG</span><span class="p">,</span> <span class="s">"ESP_HIDD_EVENT_BLE_LED_REPORT_WRITE_EVT"</span><span class="p">);</span>
+            <span class="n">ESP_LOG_BUFFER_HEX</span><span class="p">(</span><span class="n">HID_DEMO_TAG</span><span class="p">,</span> <span class="n">param</span><span class="o">-&gt;</span><span class="n">led_write</span><span class="p">.</span><span class="n">data</span><span class="p">,</span> <span class="n">param</span><span class="o">-&gt;</span><span class="n">led_write</span><span class="p">.</span><span class="n">length</span><span class="p">);</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="nl">default:</span>
+            <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">static</span> <span class="kt">void</span> <span class="nf">gap_event_handler</span><span class="p">(</span><span class="n">esp_gap_ble_cb_event_t</span> <span class="n">event</span><span class="p">,</span> <span class="n">esp_ble_gap_cb_param_t</span> <span class="o">*</span><span class="n">param</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="n">ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT</span><span class="p">:</span>
+        <span class="n">esp_ble_gap_start_advertising</span><span class="p">(</span><span class="o">&amp;</span><span class="n">hidd_adv_params</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+     <span class="k">case</span> <span class="n">ESP_GAP_BLE_SEC_REQ_EVT</span><span class="p">:</span>
+        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">ESP_BD_ADDR_LEN</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+             <span class="n">ESP_LOGD</span><span class="p">(</span><span class="n">HID_DEMO_TAG</span><span class="p">,</span> <span class="s">"%x:"</span><span class="p">,</span><span class="n">param</span><span class="o">-&gt;</span><span class="n">ble_security</span><span class="p">.</span><span class="n">ble_req</span><span class="p">.</span><span class="n">bd_addr</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+        <span class="p">}</span>
+        <span class="n">esp_ble_gap_security_rsp</span><span class="p">(</span><span class="n">param</span><span class="o">-&gt;</span><span class="n">ble_security</span><span class="p">.</span><span class="n">ble_req</span><span class="p">.</span><span class="n">bd_addr</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
+	 <span class="k">break</span><span class="p">;</span>
+     <span class="k">case</span> <span class="n">ESP_GAP_BLE_AUTH_CMPL_EVT</span><span class="p">:</span>
+        <span class="n">sec_conn</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+        <span class="n">esp_bd_addr_t</span> <span class="n">bd_addr</span><span class="p">;</span>
+        <span class="n">memcpy</span><span class="p">(</span><span class="n">bd_addr</span><span class="p">,</span> <span class="n">param</span><span class="o">-&gt;</span><span class="n">ble_security</span><span class="p">.</span><span class="n">auth_cmpl</span><span class="p">.</span><span class="n">bd_addr</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">esp_bd_addr_t</span><span class="p">));</span>
+        <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">HID_DEMO_TAG</span><span class="p">,</span> <span class="s">"remote BD_ADDR: %08x%04x"</span><span class="p">,</span>\
+                <span class="p">(</span><span class="n">bd_addr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">bd_addr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">bd_addr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">+</span> <span class="n">bd_addr</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+                <span class="p">(</span><span class="n">bd_addr</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">+</span> <span class="n">bd_addr</span><span class="p">[</span><span class="mi">5</span><span class="p">]);</span>
+        <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">HID_DEMO_TAG</span><span class="p">,</span> <span class="s">"address type = %d"</span><span class="p">,</span> <span class="n">param</span><span class="o">-&gt;</span><span class="n">ble_security</span><span class="p">.</span><span class="n">auth_cmpl</span><span class="p">.</span><span class="n">addr_type</span><span class="p">);</span>
+        <span class="n">ESP_LOGI</span><span class="p">(</span><span class="n">HID_DEMO_TAG</span><span class="p">,</span> <span class="s">"pair status = %s"</span><span class="p">,</span><span class="n">param</span><span class="o">-&gt;</span><span class="n">ble_security</span><span class="p">.</span><span class="n">auth_cmpl</span><span class="p">.</span><span class="n">success</span> <span class="o">?</span> <span class="s">"success"</span> <span class="o">:</span> <span class="s">"fail"</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">param</span><span class="o">-&gt;</span><span class="n">ble_security</span><span class="p">.</span><span class="n">auth_cmpl</span><span class="p">.</span><span class="n">success</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">HID_DEMO_TAG</span><span class="p">,</span> <span class="s">"fail reason = 0x%x"</span><span class="p">,</span><span class="n">param</span><span class="o">-&gt;</span><span class="n">ble_security</span><span class="p">.</span><span class="n">auth_cmpl</span><span class="p">.</span><span class="n">fail_reason</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="nl">default:</span>
+        <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="kt">void</span> <span class="nf">imu_init</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">i2c_config_t</span> <span class="n">conf</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">I2C_MODE_MASTER</span><span class="p">,</span>
+        <span class="p">.</span><span class="n">sda_io_num</span> <span class="o">=</span> <span class="n">I2C_MASTER_SDA_IO</span><span class="p">,</span>
+        <span class="p">.</span><span class="n">sda_pullup_en</span> <span class="o">=</span> <span class="n">GPIO_PULLUP_ENABLE</span><span class="p">,</span>
+        <span class="p">.</span><span class="n">scl_io_num</span> <span class="o">=</span> <span class="n">I2C_MASTER_SCL_IO</span><span class="p">,</span>
+        <span class="p">.</span><span class="n">scl_pullup_en</span> <span class="o">=</span> <span class="n">GPIO_PULLUP_ENABLE</span><span class="p">,</span>
+        <span class="p">.</span><span class="n">master</span><span class="p">.</span><span class="n">clk_speed</span> <span class="o">=</span> <span class="n">I2C_MASTER_FREQ_HZ</span><span class="p">,</span>
+    <span class="p">};</span>
+    <span class="n">i2c_param_config</span><span class="p">(</span><span class="n">I2C_MASTER_NUM</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">conf</span><span class="p">);</span>
+    <span class="n">i2c_driver_install</span><span class="p">(</span><span class="n">I2C_MASTER_NUM</span><span class="p">,</span> <span class="n">conf</span><span class="p">.</span><span class="n">mode</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="kt">void</span> <span class="nf">imu_read_gyro</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span> <span class="n">out</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">uint8_t</span> <span class="n">write</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mh">0x0b</span><span class="p">,</span> <span class="mh">0x0c</span><span class="p">,</span> <span class="mh">0x0d</span><span class="p">,</span> <span class="mh">0x0e</span><span class="p">,</span> <span class="mh">0x11</span><span class="p">,</span> <span class="mh">0x12</span><span class="p">,</span> <span class="mh">0x13</span><span class="p">,</span> <span class="mh">0x14</span><span class="p">};</span>
+    <span class="kt">uint8_t</span> <span class="n">read</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">write</span><span class="p">);</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">i2c_cmd_handle_t</span> <span class="n">cmd</span> <span class="o">=</span> <span class="n">i2c_cmd_link_create</span><span class="p">();</span>
+        <span class="n">i2c_master_start</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+        <span class="n">i2c_master_write_byte</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="p">(</span><span class="n">imu_address</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="n">I2C_MASTER_WRITE</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
+        <span class="n">i2c_master_write</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">write</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
+        <span class="n">i2c_master_stop</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+        <span class="n">esp_err_t</span> <span class="n">ret</span> <span class="o">=</span> <span class="n">i2c_master_cmd_begin</span><span class="p">(</span><span class="n">I2C_MASTER_NUM</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="mi">1000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+        <span class="n">i2c_cmd_link_delete</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">!=</span> <span class="n">ESP_OK</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">printf</span><span class="p">(</span><span class="s">"WRITE ERROR!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="n">vTaskDelay</span><span class="p">(</span><span class="mi">5</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span> <span class="c1">// Wait for the measurement to complete</span>
+
+        <span class="n">cmd</span> <span class="o">=</span> <span class="n">i2c_cmd_link_create</span><span class="p">();</span>
+        <span class="n">i2c_master_start</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+        <span class="n">i2c_master_write_byte</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="p">(</span><span class="n">imu_address</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="n">I2C_MASTER_READ</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
+        <span class="n">i2c_master_read</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">read</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">I2C_MASTER_LAST_NACK</span><span class="p">);</span>
+        <span class="n">i2c_master_stop</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">i2c_master_cmd_begin</span><span class="p">(</span><span class="n">I2C_MASTER_NUM</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="mi">1000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+        <span class="n">i2c_cmd_link_delete</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">!=</span> <span class="n">ESP_OK</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">printf</span><span class="p">(</span><span class="s">"READ ERROR!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="c1">// Assuming data contains the raw accelerometer readings</span>
+    <span class="c1">// You'll need to parse your IMU's data format here</span>
+
+    <span class="c1">// Calculate the tilt direction based on the accelerometer data</span>
+    <span class="kt">int16_t</span> <span class="n">x</span> <span class="o">=</span> <span class="p">((</span><span class="n">read</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">|</span> <span class="n">read</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span> <span class="c1">//Unsigned values</span>
+    <span class="kt">int16_t</span> <span class="n">y</span> <span class="o">=</span> <span class="p">((</span><span class="n">read</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">|</span> <span class="n">read</span><span class="p">[</span><span class="mi">3</span><span class="p">]);</span>
+    <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+    <span class="n">out</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">hid_demo_task</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">pvParameters</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">sec_conn</span><span class="p">)</span> <span class="p">{</span>
+            <span class="c1">//ESP_LOGI(HID_DEMO_TAG, "Send the volume");</span>
+            <span class="n">send_volum_up</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+            <span class="kt">int</span> <span class="n">gyro</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+            <span class="n">gyro</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="n">gyro</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="kt">int</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="n">imu_read_gyro</span><span class="p">(</span><span class="n">gyro</span><span class="p">);</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">gyro</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">500</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="mi">255</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">gyro</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">500</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="o">-</span><span class="mi">255</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">gyro</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">500</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="o">-</span><span class="mi">255</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">gyro</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">500</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="mi">255</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="n">vTaskDelay</span><span class="p">(</span><span class="mi">5</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">send_volum_up</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">send_volum_up</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+                <span class="n">esp_hidd_send_mouse_value</span><span class="p">(</span><span class="n">hid_conn_id</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+
+<span class="kt">void</span> <span class="nf">app_main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">imu_init</span><span class="p">();</span>
+    <span class="kt">uint8_t</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mh">0x1F</span><span class="p">,</span> <span class="mh">0x7F</span><span class="p">};</span>
+    <span class="n">i2c_cmd_handle_t</span> <span class="n">cmd</span> <span class="o">=</span> <span class="n">i2c_cmd_link_create</span><span class="p">();</span>
+    <span class="n">i2c_master_start</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+    <span class="n">i2c_master_write_byte</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="p">(</span><span class="n">imu_address</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="n">I2C_MASTER_WRITE</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
+    <span class="n">i2c_master_write</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
+    <span class="n">vTaskDelay</span><span class="p">(</span><span class="mi">5</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+    <span class="n">i2c_master_write</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
+    <span class="n">i2c_master_stop</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+    <span class="n">esp_err_t</span> <span class="n">rett</span> <span class="o">=</span> <span class="n">i2c_master_cmd_begin</span><span class="p">(</span><span class="n">I2C_MASTER_NUM</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="mi">1000</span> <span class="o">/</span> <span class="n">portTICK_PERIOD_MS</span><span class="p">);</span>
+    <span class="n">i2c_cmd_link_delete</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+    <span class="n">esp_log_level_set</span><span class="p">(</span><span class="s">"dhcpc"</span><span class="p">,</span> <span class="n">ESP_LOG_INFO</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">rett</span> <span class="o">!=</span> <span class="n">ESP_OK</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"GYRO START ERROR!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="n">esp_err_t</span> <span class="n">ret</span><span class="p">;</span>
+
+    <span class="c1">// Initialize NVS.</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">nvs_flash_init</span><span class="p">();</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">==</span> <span class="n">ESP_ERR_NVS_NO_FREE_PAGES</span> <span class="o">||</span> <span class="n">ret</span> <span class="o">==</span> <span class="n">ESP_ERR_NVS_NEW_VERSION_FOUND</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">ESP_ERROR_CHECK</span><span class="p">(</span><span class="n">nvs_flash_erase</span><span class="p">());</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">nvs_flash_init</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="n">ESP_ERROR_CHECK</span><span class="p">(</span> <span class="n">ret</span> <span class="p">);</span>
+
+    <span class="n">ESP_ERROR_CHECK</span><span class="p">(</span><span class="n">esp_bt_controller_mem_release</span><span class="p">(</span><span class="n">ESP_BT_MODE_CLASSIC_BT</span><span class="p">));</span>
+
+    <span class="n">esp_bt_controller_config_t</span> <span class="n">bt_cfg</span> <span class="o">=</span> <span class="n">BT_CONTROLLER_INIT_CONFIG_DEFAULT</span><span class="p">();</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">esp_bt_controller_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bt_cfg</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">ret</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">HID_DEMO_TAG</span><span class="p">,</span> <span class="s">"%s initialize controller failed"</span><span class="p">,</span> <span class="n">__func__</span><span class="p">);</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">esp_bt_controller_enable</span><span class="p">(</span><span class="n">ESP_BT_MODE_BLE</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">ret</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">HID_DEMO_TAG</span><span class="p">,</span> <span class="s">"%s enable controller failed"</span><span class="p">,</span> <span class="n">__func__</span><span class="p">);</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">esp_bluedroid_config_t</span> <span class="n">bluedroid_cfg</span> <span class="o">=</span> <span class="n">BT_BLUEDROID_INIT_CONFIG_DEFAULT</span><span class="p">();</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">esp_bluedroid_init_with_cfg</span><span class="p">(</span><span class="o">&amp;</span><span class="n">bluedroid_cfg</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">ret</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">HID_DEMO_TAG</span><span class="p">,</span> <span class="s">"%s init bluedroid failed"</span><span class="p">,</span> <span class="n">__func__</span><span class="p">);</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">esp_bluedroid_enable</span><span class="p">();</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">ret</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">HID_DEMO_TAG</span><span class="p">,</span> <span class="s">"%s init bluedroid failed"</span><span class="p">,</span> <span class="n">__func__</span><span class="p">);</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span><span class="p">((</span><span class="n">ret</span> <span class="o">=</span> <span class="n">esp_hidd_profile_init</span><span class="p">())</span> <span class="o">!=</span> <span class="n">ESP_OK</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">ESP_LOGE</span><span class="p">(</span><span class="n">HID_DEMO_TAG</span><span class="p">,</span> <span class="s">"%s init bluedroid failed"</span><span class="p">,</span> <span class="n">__func__</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="c1">///register the callback function to the gap module</span>
+    <span class="n">esp_ble_gap_register_callback</span><span class="p">(</span><span class="n">gap_event_handler</span><span class="p">);</span>
+    <span class="n">esp_hidd_register_callbacks</span><span class="p">(</span><span class="n">hidd_event_callback</span><span class="p">);</span>
+
+    <span class="cm">/* set the security iocap &amp; auth_req &amp; key size &amp; init key response key parameters to the stack*/</span>
+    <span class="n">esp_ble_auth_req_t</span> <span class="n">auth_req</span> <span class="o">=</span> <span class="n">ESP_LE_AUTH_BOND</span><span class="p">;</span>     <span class="c1">//bonding with peer device after authentication</span>
+    <span class="n">esp_ble_io_cap_t</span> <span class="n">iocap</span> <span class="o">=</span> <span class="n">ESP_IO_CAP_NONE</span><span class="p">;</span>           <span class="c1">//set the IO capability to No output No input</span>
+    <span class="kt">uint8_t</span> <span class="n">key_size</span> <span class="o">=</span> <span class="mi">16</span><span class="p">;</span>      <span class="c1">//the key size should be 7~16 bytes</span>
+    <span class="kt">uint8_t</span> <span class="n">init_key</span> <span class="o">=</span> <span class="n">ESP_BLE_ENC_KEY_MASK</span> <span class="o">|</span> <span class="n">ESP_BLE_ID_KEY_MASK</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">rsp_key</span> <span class="o">=</span> <span class="n">ESP_BLE_ENC_KEY_MASK</span> <span class="o">|</span> <span class="n">ESP_BLE_ID_KEY_MASK</span><span class="p">;</span>
+    <span class="n">esp_ble_gap_set_security_param</span><span class="p">(</span><span class="n">ESP_BLE_SM_AUTHEN_REQ_MODE</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">auth_req</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">uint8_t</span><span class="p">));</span>
+    <span class="n">esp_ble_gap_set_security_param</span><span class="p">(</span><span class="n">ESP_BLE_SM_IOCAP_MODE</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">iocap</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">uint8_t</span><span class="p">));</span>
+    <span class="n">esp_ble_gap_set_security_param</span><span class="p">(</span><span class="n">ESP_BLE_SM_MAX_KEY_SIZE</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">key_size</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">uint8_t</span><span class="p">));</span>
+    <span class="cm">/* If your BLE device act as a Slave, the init_key means you hope which types of key of the master should distribute to you,
+    and the response key means which key you can distribute to the Master;
+    If your BLE device act as a master, the response key means you hope which types of key of the slave should distribute to you,
+    and the init key means which key you can distribute to the slave. */</span>
+    <span class="n">esp_ble_gap_set_security_param</span><span class="p">(</span><span class="n">ESP_BLE_SM_SET_INIT_KEY</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">init_key</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">uint8_t</span><span class="p">));</span>
+    <span class="n">esp_ble_gap_set_security_param</span><span class="p">(</span><span class="n">ESP_BLE_SM_SET_RSP_KEY</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">rsp_key</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">uint8_t</span><span class="p">));</span>
+
+    <span class="n">xTaskCreate</span><span class="p">(</span><span class="o">&amp;</span><span class="n">hid_demo_task</span><span class="p">,</span> <span class="s">"hid_task"</span><span class="p">,</span> <span class="mi">2048</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+</div>
+  </main>
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    <i class="fas fa-code"></i> with <i class="fas fa-heart"></i>
+    by <strong>Bradley Paoli</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center"><a class="social mx-1"  href="mailto:bradleypaoli@gmail.com"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#db4437'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.github.com/bpaoli"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#333333'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.instagram.com/brad_paoli"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#405de6'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-instagram fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.linkedin.com/in/bradley-paoli"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#007bb5'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a>
+
+</div></footer>
+
+  
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+</body>
+
+</html>

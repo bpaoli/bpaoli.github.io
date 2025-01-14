@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by yousinix
+  Free for personal and commercial use under the MIT license
+  https://github.com/yousinix/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  
+  
+  
+
+  
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="The Package Vault">
+  <meta property="og:description" content="A package theft prevention system project utilizing a smart lockbox with an extensive sensor array and a full stack software suite for device mangement and f...">
+  <meta property="og:image" content="https://cdn.pixabay.com/photo/2024/06/26/23/36/package-8856091_640.png">
+
+  <title>The Package Vault</title>
+  <meta name="description" content="A package theft prevention system project utilizing a smart lockbox with an extensive sensor array and a full stack software suite for device mangement and f...">
+
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Theme style -->
+  <script src="/assets/js/theme.js"></script>
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css">
+
+</head>
+
+
+<body class="h-100 d-flex flex-column">
+
+  <main class="flex-shrink-0 container mt-5">
+    <nav class="navbar navbar-expand-lg navbar-themed">
+
+  <a class="navbar-brand" href="/"><h5><b>Bradley Paoli</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <i class="fas fa-1x fa-bars text-themed"></i>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link active" href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      <a class="nav-item nav-link " href="https://github.com/bpaoli"><i class="fab fa-1x fa-github"></i></a>
+
+      
+
+      <span id="theme-toggler" class="nav-item nav-link" role="button" onclick="toggleTheme()"></span>
+    </div>
+  </div>
+
+</nav>
+    <div class="col-lg-10 mx-auto mt-5 markdown-body">
+  <h1 id="the-package-vault">The Package Vault</h1>
+
+<h3 id="tools">Tools</h3>
+<ul>
+  <li><strong>Embedded C</strong></li>
+  <li><strong>Full Stack</strong></li>
+  <li><strong>Embedded Systems</strong></li>
+</ul>
+
+<h3 id="description">Description</h3>
+<p>A package theft prevention system project utilizing a smart lockbox with an extensive sensor array and a full-stack software suite for device management and feature implementation.</p>
+
+<hr />
+
+<p>Since the rise of online shopping, many homes have experienced an increase in the number of packages delivered weekly. Unfortunately, this has been accompanied by a significant rise in porch package theft. Homeowners, often away for work or vacations, may only discover the theft of their packages upon returning home.</p>
+
+<p>According to a study conducted by the Chamber of Commerce:</p>
+<ul>
+  <li><strong>26% of consumers</strong> have experienced package theft.</li>
+  <li>The <strong>average value</strong> of stolen packages is $81.91.</li>
+  <li><strong>38% of participants</strong> believe that doorbell cameras do not effectively deter package thieves.</li>
+</ul>
+
+<h3 id="objective">Objective</h3>
+<p>To combat porch package theft, our project introduces a <strong>smart vault system</strong> designed to securely store packages upon delivery. This solution offers both <strong>safety</strong> and <strong>convenience</strong> for homeowners by ensuring deliveries are accessible only to authorized individuals.</p>
+
+<hr />
+
+<h3 id="key-features">Key Features</h3>
+<ul>
+  <li><strong>Secure Access:</strong> The vault unlocks only for authorized users, such as homeowners, delivery personnel, or any specified individuals.</li>
+  <li><strong>Mobile Application:</strong> Users can:
+    <ul>
+      <li>View a list of pending deliveries.</li>
+      <li>Set or reset the vault’s unlock code.</li>
+      <li>Access live camera footage from the vault.</li>
+    </ul>
+  </li>
+  <li><strong>Dual-Chamber Design:</strong>
+    <ul>
+      <li><strong>Top Chamber:</strong> Packages are delivered here first.</li>
+      <li><strong>Bottom Chamber:</strong> Packages are transferred here for secure storage once the top chamber is closed and relocked.</li>
+      <li>Access to the bottom chamber is restricted to the homeowner via a robust access control system.</li>
+    </ul>
+  </li>
+</ul>
+
+<hr />
+
+<h3 id="my-contribution">My Contribution</h3>
+<p>I was responsible for:</p>
+<ol>
+  <li><strong>Building the physical prototype:</strong>
+    <ul>
+      <li>Constructed the dual-chamber lockbox with a tambour-style door separating the chambers.</li>
+      <li>Integrated motors for operating the tambour door.</li>
+    </ul>
+  </li>
+  <li><strong>Embedded System Integration:</strong>
+    <ul>
+      <li>Wrote the embedded C code to control physical interactions with the lockbox.</li>
+      <li>Integrated:
+        <ul>
+          <li>Electromagnetic locks to manage access to both chambers.</li>
+          <li>Magnetic sensors to detect door states (open/closed).</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ol>
+
+<hr />
+
+<h3 id="additional-resources">Additional Resources</h3>
+<p><a href="https://docs.google.com/document/d/1WqZcZflfH0FgMuc_nilx3sjoyTQBZSVSMhjYafap2CI/edit?usp=sharing">Full Design Document</a></p>
+
+<hr />
+
+<h3 id="code-snippet">Code Snippet</h3>
+<p>Below is an example of the embedded C code I wrote to control the box:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">"freertos/FreeRTOS.h"</span><span class="cp">
+#include</span> <span class="cpf">"freertos/task.h"</span><span class="cp">
+#include</span> <span class="cpf">"esp_system.h"</span><span class="cp">
+#include</span> <span class="cpf">"esp_log.h"</span><span class="cp">
+#include</span> <span class="cpf">"driver/gpio.h"</span><span class="cp">
+</span>
+<span class="c1">//Comm pins with the sensor team</span>
+<span class="cp">#define Top_Door_Pin GPIO_NUM_0
+#define Bottom_Door_Pin GPIO_NUM_1
+#define Middle_Door_Pin GPIO_NUM_2 
+</span>
+<span class="c1">//Door magnet sensors</span>
+<span class="cp">#define Top_Door_Sensor GPIO_NUM_4
+#define Bottom_Door_Sensor GPIO_NUM_5
+#define Mid_Door_Sensor GPIO_NUM_6
+</span>
+<span class="c1">//Door locking bolt pins</span>
+<span class="cp">#define Top_Door_Bolt GPIO_NUM_7
+#define Bottom_Door_Bolt GPIO_NUM_8
+#define Mid_Door_Bolt GPIO_NUM_21
+</span>
+<span class="c1">//H-Bridge control pins for the motors</span>
+<span class="cp">#define Motor_Pin_0 GPIO_NUM_10
+#define Motor_Pin_1 GPIO_NUM_9
+#define Motor_Pin_2 GPIO_NUM_20
+#define Motor_Pin_3 GPIO_NUM_3
+</span>
+<span class="kt">int</span> <span class="nf">open_top_door</span><span class="p">(){</span>
+    <span class="kt">int</span> <span class="n">mid_state</span> <span class="o">=</span> <span class="n">gpio_get_level</span><span class="p">(</span><span class="n">Mid_Door_Sensor</span><span class="p">);</span>
+    <span class="kt">int</span> <span class="n">bot_state</span> <span class="o">=</span> <span class="n">gpio_get_level</span><span class="p">(</span><span class="n">Bottom_Door_Sensor</span><span class="p">);</span>
+    <span class="kt">int</span> <span class="n">top_state</span><span class="p">;</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">mid_state</span> <span class="o">&amp;&amp;</span> <span class="n">bot_state</span><span class="p">){</span><span class="c1">//Both the middle and bottom doors are closed so the top can open</span>
+        <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Top_Door_Bolt</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span><span class="c1">//open the top door bolt</span>
+        <span class="k">while</span><span class="p">((</span><span class="n">top_state</span> <span class="o">=</span> <span class="n">gpio_get_level</span><span class="p">(</span><span class="n">Top_Door_Sensor</span><span class="p">))){</span> <span class="c1">//Keep the top door bolt open until the sensor detects it has been opened</span>
+            <span class="n">printf</span><span class="p">(</span><span class="s">"Top door sensor %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">top_state</span><span class="p">);</span>
+            <span class="n">vTaskDelay</span><span class="p">(</span><span class="n">pdMS_TO_TICKS</span><span class="p">(</span><span class="mi">100</span><span class="p">));</span>
+        <span class="p">}</span>
+        <span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">top_state</span> <span class="o">=</span> <span class="n">gpio_get_level</span><span class="p">(</span><span class="n">Top_Door_Sensor</span><span class="p">))){</span> <span class="c1">//Keep the top door bolt open until the sensor detects it closed</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"Top door sensor %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">top_state</span><span class="p">);</span>
+            <span class="n">vTaskDelay</span><span class="p">(</span><span class="n">pdMS_TO_TICKS</span><span class="p">(</span><span class="mi">100</span><span class="p">));</span>
+        <span class="p">}</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"Top door sensor %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">top_state</span><span class="p">);</span>
+        <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Top_Door_Bolt</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span><span class="c1">//close the top door bolt</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">open_mid_door</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Mid_Door_Bolt</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> <span class="c1">// Unlock the door</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Unlocking MidDoor</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="n">vTaskDelay</span><span class="p">(</span><span class="n">pdMS_TO_TICKS</span><span class="p">(</span><span class="mi">2000</span><span class="p">));</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Motor_Pin_0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Motor_Pin_1</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Motor_Pin_2</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Motor_Pin_3</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="n">vTaskDelay</span><span class="p">(</span><span class="n">pdMS_TO_TICKS</span><span class="p">(</span><span class="mi">2000</span><span class="p">));</span>
+    <span class="kt">int</span> <span class="n">button_state</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">button_state</span> <span class="o">=</span> <span class="n">gpio_get_level</span><span class="p">(</span><span class="n">Mid_Door_Sensor</span><span class="p">)))</span> <span class="p">{</span> <span class="c1">// Keep the motors spinning until the middle door opens</span>
+        <span class="n">vTaskDelay</span><span class="p">(</span><span class="n">pdMS_TO_TICKS</span><span class="p">(</span><span class="mi">50</span><span class="p">));</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"Opening Middle Door</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Motor_Pin_0</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> <span class="c1">//Left motor</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Motor_Pin_1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Motor_Pin_2</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> <span class="c1">//Right Motor</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Motor_Pin_3</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">vTaskDelay</span><span class="p">(</span><span class="n">pdMS_TO_TICKS</span><span class="p">(</span><span class="mi">2000</span><span class="p">));</span>
+    <span class="kt">int</span> <span class="n">mid_state</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">mid_state</span> <span class="o">=</span> <span class="n">gpio_get_level</span><span class="p">(</span><span class="n">Mid_Door_Sensor</span><span class="p">)))</span> <span class="p">{</span>
+        <span class="n">vTaskDelay</span><span class="p">(</span><span class="n">pdMS_TO_TICKS</span><span class="p">(</span><span class="mi">100</span><span class="p">));</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"Closing Middle Door</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Motor_Pin_0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Motor_Pin_2</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Motor_Pin_1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Motor_Pin_3</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Mid_Door_Bolt</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> <span class="c1">// Lock the door</span>
+    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">open_bot_door</span><span class="p">(){</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Bottom_Door_Bolt</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="kt">int</span> <span class="n">bot_state</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">while</span><span class="p">((</span><span class="n">bot_state</span> <span class="o">=</span> <span class="n">gpio_get_level</span><span class="p">(</span><span class="n">Bottom_Door_Sensor</span><span class="p">))){</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"Bottom door sensor %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">bot_state</span><span class="p">);</span>
+        <span class="n">vTaskDelay</span><span class="p">(</span><span class="n">pdMS_TO_TICKS</span><span class="p">(</span><span class="mi">100</span><span class="p">));</span>
+    <span class="p">}</span>
+    <span class="k">while</span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">bot_state</span> <span class="o">=</span> <span class="n">gpio_get_level</span><span class="p">(</span><span class="n">Bottom_Door_Sensor</span><span class="p">))){</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"Bottom door sensor %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">bot_state</span><span class="p">);</span>
+        <span class="n">vTaskDelay</span><span class="p">(</span><span class="n">pdMS_TO_TICKS</span><span class="p">(</span><span class="mi">100</span><span class="p">));</span>
+    <span class="p">}</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Bottom_Door_Bolt</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Bottom door sensor %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">bot_state</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+<span class="kt">void</span> <span class="nf">app_main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// Configure GPIO pins as inputs</span>
+    <span class="n">esp_rom_gpio_pad_select_gpio</span><span class="p">(</span><span class="n">Top_Door_Pin</span><span class="p">);</span>
+    <span class="n">gpio_set_direction</span><span class="p">(</span><span class="n">Top_Door_Pin</span><span class="p">,</span> <span class="n">GPIO_MODE_INPUT</span><span class="p">);</span>
+
+    <span class="n">esp_rom_gpio_pad_select_gpio</span><span class="p">(</span><span class="n">Bottom_Door_Pin</span><span class="p">);</span>
+    <span class="n">gpio_set_direction</span><span class="p">(</span><span class="n">Bottom_Door_Pin</span><span class="p">,</span> <span class="n">GPIO_MODE_INPUT</span><span class="p">);</span>
+
+    <span class="n">esp_rom_gpio_pad_select_gpio</span><span class="p">(</span><span class="n">Bottom_Door_Sensor</span><span class="p">);</span>
+    <span class="n">gpio_set_direction</span><span class="p">(</span><span class="n">Bottom_Door_Sensor</span><span class="p">,</span> <span class="n">GPIO_MODE_INPUT</span><span class="p">);</span>
+
+    <span class="n">esp_rom_gpio_pad_select_gpio</span><span class="p">(</span><span class="n">Mid_Door_Sensor</span><span class="p">);</span>
+    <span class="n">gpio_set_direction</span><span class="p">(</span><span class="n">Mid_Door_Sensor</span><span class="p">,</span> <span class="n">GPIO_MODE_INPUT</span><span class="p">);</span>
+
+    <span class="n">esp_rom_gpio_pad_select_gpio</span><span class="p">(</span><span class="n">Top_Door_Sensor</span><span class="p">);</span>
+    <span class="n">gpio_set_direction</span><span class="p">(</span><span class="n">Top_Door_Sensor</span><span class="p">,</span> <span class="n">GPIO_MODE_INPUT</span><span class="p">);</span>
+
+    <span class="c1">//Configure GPIO pins as outputs</span>
+    <span class="n">esp_rom_gpio_pad_select_gpio</span><span class="p">(</span><span class="n">Middle_Door_Pin</span><span class="p">);</span>
+    <span class="n">gpio_set_direction</span><span class="p">(</span><span class="n">Middle_Door_Pin</span><span class="p">,</span> <span class="n">GPIO_MODE_OUTPUT</span><span class="p">);</span>
+
+    <span class="n">esp_rom_gpio_pad_select_gpio</span><span class="p">(</span><span class="n">Top_Door_Bolt</span><span class="p">);</span>
+    <span class="n">gpio_set_direction</span><span class="p">(</span><span class="n">Top_Door_Bolt</span><span class="p">,</span> <span class="n">GPIO_MODE_OUTPUT</span><span class="p">);</span>
+
+    <span class="n">esp_rom_gpio_pad_select_gpio</span><span class="p">(</span><span class="n">Bottom_Door_Bolt</span><span class="p">);</span>
+    <span class="n">gpio_set_direction</span><span class="p">(</span><span class="n">Bottom_Door_Bolt</span><span class="p">,</span> <span class="n">GPIO_MODE_OUTPUT</span><span class="p">);</span>
+
+    <span class="n">esp_rom_gpio_pad_select_gpio</span><span class="p">(</span><span class="n">Mid_Door_Bolt</span><span class="p">);</span>
+    <span class="n">gpio_set_direction</span><span class="p">(</span><span class="n">Mid_Door_Bolt</span><span class="p">,</span> <span class="n">GPIO_MODE_OUTPUT</span><span class="p">);</span>
+
+    <span class="n">esp_rom_gpio_pad_select_gpio</span><span class="p">(</span><span class="n">Motor_Pin_0</span><span class="p">);</span>
+    <span class="n">gpio_set_direction</span><span class="p">(</span><span class="n">Motor_Pin_0</span><span class="p">,</span> <span class="n">GPIO_MODE_OUTPUT</span><span class="p">);</span>
+
+    <span class="n">esp_rom_gpio_pad_select_gpio</span><span class="p">(</span><span class="n">Motor_Pin_1</span><span class="p">);</span>
+    <span class="n">gpio_set_direction</span><span class="p">(</span><span class="n">Motor_Pin_1</span><span class="p">,</span> <span class="n">GPIO_MODE_OUTPUT</span><span class="p">);</span>
+
+    <span class="n">esp_rom_gpio_pad_select_gpio</span><span class="p">(</span><span class="n">Motor_Pin_2</span><span class="p">);</span>
+    <span class="n">gpio_set_direction</span><span class="p">(</span><span class="n">Motor_Pin_2</span><span class="p">,</span> <span class="n">GPIO_MODE_OUTPUT</span><span class="p">);</span>
+
+    <span class="n">esp_rom_gpio_pad_select_gpio</span><span class="p">(</span><span class="n">Motor_Pin_3</span><span class="p">);</span>
+    <span class="n">gpio_set_direction</span><span class="p">(</span><span class="n">Motor_Pin_3</span><span class="p">,</span> <span class="n">GPIO_MODE_OUTPUT</span><span class="p">);</span>
+
+    <span class="kt">int</span> <span class="n">error_status</span><span class="p">;</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Top_Door_Bolt</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Bottom_Door_Bolt</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Mid_Door_Bolt</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Motor_Pin_0</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Motor_Pin_2</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Motor_Pin_1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Motor_Pin_3</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Middle_Door_Pin</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// Read requests from </span>
+        <span class="kt">int</span> <span class="n">top_state</span> <span class="o">=</span> <span class="n">gpio_get_level</span><span class="p">(</span><span class="n">Top_Door_Pin</span><span class="p">);</span>
+        <span class="kt">int</span> <span class="n">bot_state</span> <span class="o">=</span> <span class="n">gpio_get_level</span><span class="p">(</span><span class="n">Bottom_Door_Pin</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">top_state</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//Sensor team is requesting for the top door to unlock</span>
+            <span class="n">printf</span><span class="p">(</span><span class="s">"Top door unlock requested. Opening top door.......</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+            <span class="n">error_status</span> <span class="o">=</span> <span class="n">open_top_door</span><span class="p">();</span>
+            <span class="n">printf</span><span class="p">(</span><span class="s">"Top door closed. Cycling middle door.......</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">error_status</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">){</span>
+                <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Middle_Door_Pin</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+                <span class="n">error_status</span> <span class="o">=</span> <span class="n">open_mid_door</span><span class="p">();</span>
+                <span class="n">gpio_set_level</span><span class="p">(</span><span class="n">Middle_Door_Pin</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+            <span class="p">}</span>
+            
+        <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">bot_state</span><span class="p">){</span> <span class="c1">//Sensor team is requesting for the bottom door to unlock</span>
+            <span class="n">printf</span><span class="p">(</span><span class="s">"Bottom door unlock request</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+            <span class="n">error_status</span> <span class="o">=</span> <span class="n">open_bot_door</span><span class="p">();</span>
+            <span class="n">printf</span><span class="p">(</span><span class="s">"Bottom door closed.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="c1">// Delay to avoid excessive polling</span>
+        <span class="n">vTaskDelay</span><span class="p">(</span><span class="n">pdMS_TO_TICKS</span><span class="p">(</span><span class="mi">100</span><span class="p">));</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+</div>
+  </main>
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    <i class="fas fa-code"></i> with <i class="fas fa-heart"></i>
+    by <strong>Bradley Paoli</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center"><a class="social mx-1"  href="mailto:bradleypaoli@gmail.com"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#db4437'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.github.com/bpaoli"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#333333'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.instagram.com/brad_paoli"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#405de6'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-instagram fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.linkedin.com/in/bradley-paoli"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#007bb5'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a>
+
+</div></footer>
+
+  
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+</body>
+
+</html>

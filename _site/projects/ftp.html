@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+
+<!--
+  portfolYOU Jekyll theme by yousinix
+  Free for personal and commercial use under the MIT license
+  https://github.com/yousinix/portfolYOU
+-->
+
+<html lang="en" class="h-100">
+
+<head>
+
+  
+  
+  
+
+  
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="File Transfer Protocol">
+  <meta property="og:description" content="A custom-built protocol project designed for reliable file transfer between clients and servers over unpredictable networks with built in testing for real-wo...">
+  <meta property="og:image" content="https://img.freepik.com/free-vector/file-transfer-concept-illustration_114360-580.jpg?ga=GA1.1.856602515.1736808652&semt=ais_hybrid">
+
+  <title>File Transfer Protocol</title>
+  <meta name="description" content="A custom-built protocol project designed for reliable file transfer between clients and servers over unpredictable networks with built in testing for real-wo...">
+
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico">
+
+  <!-- Theme style -->
+  <script src="/assets/js/theme.js"></script>
+
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+
+  <!-- Animate CSS CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.css">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/assets/css/style.css">
+
+</head>
+
+
+<body class="h-100 d-flex flex-column">
+
+  <main class="flex-shrink-0 container mt-5">
+    <nav class="navbar navbar-expand-lg navbar-themed">
+
+  <a class="navbar-brand" href="/"><h5><b>Bradley Paoli</b></h5></a>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <i class="fas fa-1x fa-bars text-themed"></i>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav ml-auto"><a class="nav-item nav-link active" href="/projects/">Projects</a>
+
+      <a class="nav-item nav-link " href="/about/">About</a>
+
+      <a class="nav-item nav-link " href="https://github.com/bpaoli"><i class="fab fa-1x fa-github"></i></a>
+
+      
+
+      <span id="theme-toggler" class="nav-item nav-link" role="button" onclick="toggleTheme()"></span>
+    </div>
+  </div>
+
+</nav>
+    <div class="col-lg-10 mx-auto mt-5 markdown-body">
+  <h1 id="simple-reliable-file-transfer-protocol">Simple Reliable File Transfer Protocol</h1>
+
+<h2 id="overview">Overview</h2>
+
+<p>Simple reliable file transfer is a set of two programs used to send files over a network from a client to a server. The client reads from a file, splits it into packets, and sends them to the server. The server reads the packets and stores them at a specified path. A custom transfer protocol ensures reliability, and the client software is threaded to handle multiple servers simultaneously. It is designed to work with the Unix socket API.</p>
+
+<h3 id="features">Features</h3>
+
+<ul>
+  <li><strong>Testing Features</strong>: Includes options to simulate packet drop rates, adjust window sizes, and set the Maximum Transmission Unit (MTU) size.</li>
+  <li><strong>Logging</strong>: Packets are logged on both the client and server sides for tracking.</li>
+  <li><strong>Threading</strong>: Client can handle multiple servers concurrently.</li>
+</ul>
+
+<hr />
+
+<h2 id="the-transfer-protocol">The Transfer Protocol</h2>
+
+<ol>
+  <li>
+    <p><strong>Server Initialization</strong>:<br />
+The server starts by creating and binding a port, waiting for a SYN packet from a client.</p>
+  </li>
+  <li><strong>Client Initialization</strong>:
+    <ul>
+      <li>Reads a configuration file to determine servers to replicate to.</li>
+      <li>Opens the input file and calculates the maximum sequence number (based on file size and MTU).</li>
+      <li>Sends a SYN packet to the server containing:
+        <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;maximum sequence number&gt; &lt;window size&gt; &lt;MTU&gt; &lt;output path&gt;
+</code></pre></div>        </div>
+      </li>
+    </ul>
+  </li>
+  <li><strong>Handshake</strong>:
+    <ul>
+      <li>The server responds with an ACK packet (sequence number 0).</li>
+      <li>If the client doesn’t receive an ACK, it retries the SYN up to 5 times before closing with an error.</li>
+    </ul>
+  </li>
+  <li><strong>Data Transfer</strong>:
+    <ul>
+      <li><strong>Protocol</strong>: Based on a Go-Back-N sliding window protocol.</li>
+      <li><strong>Server</strong>: Processes packets, writes them to the file, and manages a buffer for out-of-order packets.</li>
+      <li><strong>Client</strong>: Sends packets and waits for ACKs before advancing the base sequence number.</li>
+    </ul>
+  </li>
+  <li><strong>Error Handling</strong>:
+    <ul>
+      <li>Duplicate ACKs improve performance by preventing unnecessary retransmissions.</li>
+      <li>Server closes connections after 150 seconds of inactivity.</li>
+    </ul>
+  </li>
+</ol>
+
+<hr />
+
+<h2 id="internal-server-design">Internal Server Design</h2>
+
+<ul>
+  <li><strong>Initialization</strong>:
+    <ul>
+      <li>Validates arguments with regex patterns.</li>
+      <li>Creates and binds a socket using <code class="language-plaintext highlighter-rouge">socketbind()</code>.</li>
+    </ul>
+  </li>
+  <li><strong>Session Management</strong>:
+    <ul>
+      <li>Uses <code class="language-plaintext highlighter-rouge">sessionstart()</code> to wait for connections.</li>
+      <li>On receiving a SYN, forks a child process to handle file transfer.</li>
+    </ul>
+  </li>
+  <li><strong>Helper Functions</strong>:
+    <ul>
+      <li><strong><code class="language-plaintext highlighter-rouge">ack()</code></strong>: Sends ACKs.</li>
+      <li><strong><code class="language-plaintext highlighter-rouge">rcv()</code></strong>: Receives packets, writes sequential packets to file, and manages a buffer for out-of-order packets.</li>
+      <li><strong><code class="language-plaintext highlighter-rouge">log()</code></strong>: Logs packet events with RFC 3339 formatting.</li>
+      <li><strong><code class="language-plaintext highlighter-rouge">createDir()</code></strong>: Creates output directories as needed.</li>
+    </ul>
+  </li>
+</ul>
+
+<hr />
+
+<h2 id="internal-client-design">Internal Client Design</h2>
+
+<ul>
+  <li><strong>Initialization</strong>:
+    <ul>
+      <li>Validates arguments with regex patterns.</li>
+      <li>Calculates the maximum sequence number using <code class="language-plaintext highlighter-rouge">getSize()</code>.</li>
+    </ul>
+  </li>
+  <li><strong>Flow Control</strong>:
+    <ul>
+      <li>Manages file transfer with <code class="language-plaintext highlighter-rouge">flowcontrol()</code>:
+        <ul>
+          <li>Handles SYN/ACK handshake.</li>
+          <li>Sends packets in chunks defined by the window size.</li>
+          <li>Waits for ACKs and adjusts the base sequence number.</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><strong>Helper Functions</strong>:
+    <ul>
+      <li><strong><code class="language-plaintext highlighter-rouge">syn()</code></strong>: Formats and sends SYN packets.</li>
+      <li><strong><code class="language-plaintext highlighter-rouge">ackWait()</code></strong>: Waits for ACK packets with a 30-second timeout.</li>
+      <li><strong><code class="language-plaintext highlighter-rouge">snd()</code></strong>: Reads the input file and sends packets.</li>
+      <li><strong><code class="language-plaintext highlighter-rouge">log()</code></strong>: Logs packet events similarly to the server.</li>
+    </ul>
+  </li>
+</ul>
+
+<hr />
+
+<h2 id="shortcomings">Shortcomings</h2>
+
+<ol>
+  <li><strong>SYN Packet Limitation</strong>:
+    <ul>
+      <li>Minimum MTU size is limited by the SYN packet size (minimum 16 bytes).</li>
+      <li>Smaller MTU sizes reduce the maximum file size that can be transferred.</li>
+    </ul>
+  </li>
+  <li><strong>No FIN Packet</strong>:
+    <ul>
+      <li>Late ACKs can cause the client to resend final packets unnecessarily.</li>
+    </ul>
+  </li>
+  <li><strong>Final ACK Drop</strong>:
+    <ul>
+      <li>If the server’s final ACK is dropped, the client may time out even if the file transfer is complete.</li>
+    </ul>
+  </li>
+</ol>
+
+<hr />
+
+<h2 id="example-scenario">Example Scenario</h2>
+
+<p><strong>Test Parameters</strong>:</p>
+<ul>
+  <li>Server drop rate: 50%</li>
+  <li>Client window size: 10</li>
+  <li>MTU: 513</li>
+  <li>Maximum sequence number: 189</li>
+</ul>
+
+<hr />
+
+<h2 id="client-side-code">Client Side Code</h2>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">&lt;sys/socket.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;cstring&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;regex&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;netinet/in.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;arpa/inet.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;fstream&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;cstring&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;signal.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;filesystem&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;cmath&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;set&gt;</span><span class="cp">
+</span>
+
+<span class="kt">void</span> <span class="nf">log</span><span class="p">(</span><span class="kt">bool</span> <span class="n">data</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">dropdata</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">ack</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">dropack</span><span class="p">,</span> <span class="kt">int</span> <span class="n">seq</span><span class="p">,</span> <span class="kt">int</span> <span class="n">baseseq</span><span class="p">,</span> <span class="kt">int</span> <span class="n">win</span><span class="p">){</span>
+    <span class="k">auto</span> <span class="n">now</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">system_clock</span><span class="o">::</span><span class="n">now</span><span class="p">();</span>
+    <span class="n">std</span><span class="o">::</span><span class="kt">time_t</span> <span class="n">now_c</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">system_clock</span><span class="o">::</span><span class="n">to_time_t</span><span class="p">(</span><span class="n">now</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">tm</span><span class="o">*</span> <span class="n">utc_tm</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">gmtime</span><span class="p">(</span><span class="o">&amp;</span><span class="n">now_c</span><span class="p">);</span>
+    <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">30</span><span class="p">];</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">strftime</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buffer</span><span class="p">),</span> <span class="s">"%Y-%m-%dT%H:%M:%S"</span><span class="p">,</span> <span class="n">utc_tm</span><span class="p">);</span>
+    <span class="k">auto</span> <span class="n">milliseconds</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">duration_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">milliseconds</span><span class="o">&gt;</span><span class="p">(</span><span class="n">now</span><span class="p">.</span><span class="n">time_since_epoch</span><span class="p">())</span> <span class="o">%</span> <span class="mi">1000</span><span class="p">;</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">data</span><span class="p">){</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">buffer</span> <span class="o">&lt;&lt;</span> <span class="s">"."</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">setfill</span><span class="p">(</span><span class="sc">'0'</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">milliseconds</span><span class="p">.</span><span class="n">count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">"Z"</span> <span class="o">&lt;&lt;</span><span class="s">", DATA, "</span> <span class="o">&lt;&lt;</span> <span class="n">seq</span> <span class="o">&lt;&lt;</span>  <span class="s">", "</span> <span class="o">&lt;&lt;</span> <span class="n">baseseq</span> <span class="o">&lt;&lt;</span> <span class="s">", "</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">seq</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="s">", "</span> <span class="o">&lt;&lt;</span> <span class="n">baseseq</span> <span class="o">+</span> <span class="n">win</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">dropdata</span><span class="p">){</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">buffer</span> <span class="o">&lt;&lt;</span> <span class="s">"."</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">setfill</span><span class="p">(</span><span class="sc">'0'</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">milliseconds</span><span class="p">.</span><span class="n">count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">"Z"</span> <span class="o">&lt;&lt;</span><span class="s">", DROP DATA, "</span> <span class="o">&lt;&lt;</span> <span class="n">seq</span> <span class="o">&lt;&lt;</span>  <span class="s">", "</span> <span class="o">&lt;&lt;</span> <span class="n">baseseq</span> <span class="o">&lt;&lt;</span> <span class="s">", "</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">seq</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="s">", "</span> <span class="o">&lt;&lt;</span> <span class="n">baseseq</span> <span class="o">+</span> <span class="n">win</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">ack</span><span class="p">){</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">buffer</span> <span class="o">&lt;&lt;</span> <span class="s">"."</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">setfill</span><span class="p">(</span><span class="sc">'0'</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">milliseconds</span><span class="p">.</span><span class="n">count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">"Z"</span> <span class="o">&lt;&lt;</span><span class="s">", ACK, "</span> <span class="o">&lt;&lt;</span> <span class="n">seq</span> <span class="o">&lt;&lt;</span>  <span class="s">", "</span> <span class="o">&lt;&lt;</span> <span class="n">baseseq</span> <span class="o">&lt;&lt;</span> <span class="s">", "</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">seq</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="s">", "</span> <span class="o">&lt;&lt;</span> <span class="n">baseseq</span> <span class="o">+</span> <span class="n">win</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">dropack</span><span class="p">){</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">buffer</span> <span class="o">&lt;&lt;</span> <span class="s">"."</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">setfill</span><span class="p">(</span><span class="sc">'0'</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">milliseconds</span><span class="p">.</span><span class="n">count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">"Z"</span> <span class="o">&lt;&lt;</span><span class="s">", DROP ACK, "</span> <span class="o">&lt;&lt;</span> <span class="n">seq</span> <span class="o">&lt;&lt;</span>  <span class="s">", "</span> <span class="o">&lt;&lt;</span> <span class="n">baseseq</span> <span class="o">&lt;&lt;</span> <span class="s">", "</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">seq</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="s">", "</span> <span class="o">&lt;&lt;</span> <span class="n">baseseq</span> <span class="o">+</span> <span class="n">win</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+
+<span class="kt">int</span> <span class="n">getSize</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ifstream</span><span class="o">&amp;</span> <span class="n">inputFile</span><span class="p">,</span> <span class="kt">int</span> <span class="n">mtu</span><span class="p">){</span>
+    <span class="kt">int</span> <span class="n">maxseq</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">streampos</span> <span class="n">fileSize</span><span class="p">;</span>
+    <span class="n">inputFile</span><span class="p">.</span><span class="n">seekg</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">end</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">((</span><span class="n">fileSize</span> <span class="o">=</span> <span class="n">inputFile</span><span class="p">.</span><span class="n">tellg</span><span class="p">())</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Error determining file size"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">inputFile</span><span class="p">.</span><span class="n">seekg</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">beg</span><span class="p">);</span>
+    <span class="kt">int</span> <span class="n">fileSizeInt</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">fileSize</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">((</span><span class="n">maxseq</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">ceil</span><span class="p">(</span><span class="n">fileSizeInt</span> <span class="o">/</span> <span class="p">(</span><span class="n">mtu</span><span class="o">-</span><span class="mi">5</span><span class="p">)))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">){</span>
+        <span class="k">return</span> <span class="n">maxseq</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">maxseq</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+<span class="c1">//This function is used to create the socket and set the connection to check for errors</span>
+<span class="kt">int</span> <span class="n">socketBind</span><span class="p">(</span><span class="n">sockaddr_in</span><span class="o">&amp;</span> <span class="n">serverAddr</span><span class="p">,</span> <span class="kt">int</span> <span class="n">port</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">ip</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">socketID</span><span class="p">;</span>
+    <span class="n">bzero</span><span class="p">(</span><span class="o">&amp;</span><span class="n">serverAddr</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">serverAddr</span><span class="p">));</span> <span class="c1">//Zeros out the struct memory</span>
+    <span class="n">serverAddr</span><span class="p">.</span><span class="n">sin_family</span> <span class="o">=</span> <span class="n">AF_INET</span><span class="p">;</span> <span class="c1">//Set the struct parameters</span>
+    <span class="n">serverAddr</span><span class="p">.</span><span class="n">sin_addr</span><span class="p">.</span><span class="n">s_addr</span> <span class="o">=</span> <span class="n">htonl</span><span class="p">(</span><span class="n">INADDR_ANY</span><span class="p">);</span>
+    <span class="n">serverAddr</span><span class="p">.</span><span class="n">sin_port</span> <span class="o">=</span> <span class="n">htons</span><span class="p">(</span><span class="n">port</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">inet_pton</span><span class="p">(</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">ip</span><span class="p">.</span><span class="n">c_str</span><span class="p">(),</span> <span class="o">&amp;</span><span class="n">serverAddr</span><span class="p">.</span><span class="n">sin_addr</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//Convert the struct to binary</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"inet_pton error"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">((</span><span class="n">socketID</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">SOCK_DGRAM</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// Create the socket</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Error creating socket"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">connect</span><span class="p">(</span><span class="n">socketID</span><span class="p">,</span> <span class="p">(</span><span class="k">struct</span> <span class="nc">sockaddr</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">serverAddr</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">serverAddr</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// Run connect to check for errors</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"connect() returned an error"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">socketID</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+<span class="kt">void</span> <span class="n">syn</span><span class="p">(</span><span class="kt">int</span> <span class="n">socketID</span><span class="p">,</span> <span class="kt">int</span> <span class="n">mtu</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">outFilePath</span><span class="p">,</span> <span class="kt">int</span> <span class="n">maxseq</span><span class="p">,</span> <span class="kt">int</span> <span class="n">win</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">ssize_t</span> <span class="n">p</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">syndta</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">maxseq</span><span class="p">)</span> <span class="o">+</span> <span class="s">" "</span> <span class="o">+</span> <span class="n">std</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">win</span><span class="p">)</span> <span class="o">+</span> <span class="s">" "</span> <span class="o">+</span> <span class="n">std</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">mtu</span><span class="p">)</span> <span class="o">+</span> <span class="s">" "</span> <span class="o">+</span> <span class="n">outFilePath</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="n">sendbuf</span><span class="p">[</span><span class="mi">300</span><span class="p">];</span>
+    <span class="c1">// Check if syndta fits into sendbuf</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">syndta</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">sendbuf</span><span class="p">))</span> <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"syndta exceeds the size of sendbuf"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="k">return</span><span class="p">;</span> <span class="c1">// Exit the function</span>
+    <span class="p">}</span>
+    <span class="n">strncpy</span><span class="p">(</span><span class="n">sendbuf</span><span class="p">,</span> <span class="n">syndta</span><span class="p">.</span><span class="n">c_str</span><span class="p">(),</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">sendbuf</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="n">sendbuf</span><span class="p">[</span><span class="k">sizeof</span><span class="p">(</span><span class="n">sendbuf</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="sc">'\0'</span><span class="p">;</span>
+    <span class="c1">//log(false, false, true, false, 0, 0, 0);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"ACK "</span> <span class="o">&lt;&lt;</span> <span class="mi">0</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">((</span><span class="n">p</span> <span class="o">=</span> <span class="n">write</span><span class="p">(</span><span class="n">socketID</span><span class="p">,</span> <span class="n">sendbuf</span><span class="p">,</span> <span class="mi">300</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">errno</span> <span class="o">==</span> <span class="n">EINTR</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Cannot detect server"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Write error"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+
+<span class="kt">int</span> <span class="n">ackWait</span><span class="p">(</span><span class="kt">int</span> <span class="n">socketID</span><span class="p">){</span>
+    <span class="kt">char</span> <span class="n">recbuf</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span> <span class="c1">//Server response buffer</span>
+    <span class="kt">int</span> <span class="n">n</span><span class="p">,</span> <span class="n">seq</span><span class="p">;</span>
+    <span class="n">fd_set</span> <span class="n">readfds</span><span class="p">;</span>
+    <span class="n">FD_ZERO</span><span class="p">(</span><span class="o">&amp;</span><span class="n">readfds</span><span class="p">);</span>
+    <span class="n">FD_SET</span><span class="p">(</span><span class="n">socketID</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">readfds</span><span class="p">);</span>
+    <span class="k">struct</span> <span class="nc">timeval</span> <span class="n">timeout</span><span class="p">;</span>
+    <span class="n">timeout</span><span class="p">.</span><span class="n">tv_sec</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span> <span class="c1">// 30 seconds timeout</span>
+    <span class="n">timeout</span><span class="p">.</span><span class="n">tv_usec</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">ready</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">socketID</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">readfds</span><span class="p">,</span> <span class="nb">nullptr</span><span class="p">,</span> <span class="nb">nullptr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">timeout</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">ready</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span><span class="c1">//Select error</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"select() returned an error"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">ready</span> <span class="o">==</span> <span class="mi">0</span><span class="p">){</span><span class="c1">//Timeout</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+        <span class="k">if</span> <span class="p">((</span><span class="n">n</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">socketID</span><span class="p">,</span> <span class="n">recbuf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">recbuf</span><span class="p">)))</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//Read the response from the server</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Cannot detect server"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">regex</span> <span class="n">pattern</span><span class="p">(</span><span class="s">R"(^(\d*))"</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">smatch</span> <span class="n">match</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">seqStr</span><span class="p">(</span><span class="n">recbuf</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">regex_search</span><span class="p">(</span><span class="n">seqStr</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)){</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="n">stoi</span><span class="p">(</span><span class="n">match</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">str</span><span class="p">());</span>
+    <span class="p">}</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"ACK "</span> <span class="o">&lt;&lt;</span> <span class="n">seq</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">seq</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+<span class="kt">void</span> <span class="n">snd</span><span class="p">(</span><span class="kt">int</span> <span class="n">socketID</span><span class="p">,</span> <span class="kt">int</span> <span class="n">mtu</span><span class="p">,</span> <span class="kt">int</span> <span class="n">curseq</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">streamoff</span> <span class="n">position</span><span class="p">,</span> <span class="kt">int</span> <span class="n">win</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">inFilePath</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">ifstream</span> <span class="n">inputFile</span><span class="p">(</span><span class="n">inFilePath</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">binary</span><span class="p">);</span>
+    <span class="kt">int</span> <span class="n">p</span><span class="p">,</span> <span class="n">baseseq</span><span class="p">;</span>
+    <span class="n">inputFile</span><span class="p">.</span><span class="n">seekg</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">beg</span><span class="p">);</span>
+    <span class="n">baseseq</span> <span class="o">=</span> <span class="n">curseq</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">win</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span><span class="c1">//Loop window size number of times</span>
+        <span class="kt">char</span> <span class="n">readbuf</span><span class="p">[</span><span class="n">mtu</span><span class="o">-</span><span class="mi">5</span><span class="p">];</span> <span class="c1">//Send and recieve message buffers</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">seqstr</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">curseq</span><span class="p">);</span>
+        <span class="n">inputFile</span><span class="p">.</span><span class="n">read</span><span class="p">(</span><span class="n">readbuf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">readbuf</span><span class="p">));</span>
+        <span class="n">readbuf</span><span class="p">[</span><span class="n">inputFile</span><span class="p">.</span><span class="n">gcount</span><span class="p">()]</span> <span class="o">=</span> <span class="sc">'\0'</span><span class="p">;</span> <span class="c1">//Read the data for the current packet</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">readstr</span><span class="p">(</span><span class="n">readbuf</span><span class="p">);</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">sendbuf</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">curseq</span><span class="p">)</span> <span class="o">+</span> <span class="s">" "</span> <span class="o">+</span> <span class="n">readstr</span><span class="p">;</span>
+        <span class="c1">//log(true, false, false, false, curseq, baseseq, win);</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Data "</span> <span class="o">&lt;&lt;</span> <span class="n">curseq</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">((</span><span class="n">p</span> <span class="o">=</span> <span class="n">write</span><span class="p">(</span><span class="n">socketID</span><span class="p">,</span> <span class="n">sendbuf</span><span class="p">.</span><span class="n">c_str</span><span class="p">(),</span> <span class="n">sendbuf</span><span class="p">.</span><span class="n">size</span><span class="p">()))</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//Send the packet to the server</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">errno</span> <span class="o">==</span> <span class="n">EINTR</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Cannot detect server"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+            <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Write error"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="n">curseq</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">inputFile</span><span class="p">.</span><span class="n">close</span><span class="p">();</span>
+<span class="p">}</span>
+
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+    <span class="c1">/////////////////////////////////////INPUT VERIFICATION///////////////////////////////////////////////////////////</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">!=</span> <span class="mi">7</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//Check for the correct number of arguments</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Incorrect number of arguments"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">ip</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>  
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">portStr</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">mtuStr</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">winStr</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">inFilePath</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="mi">5</span><span class="p">];</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">outFilePath</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">in</span> <span class="o">=</span> <span class="n">ip</span> <span class="o">+</span> <span class="s">" "</span> <span class="o">+</span> <span class="n">portStr</span> <span class="o">+</span> <span class="s">" "</span> <span class="o">+</span> <span class="n">mtuStr</span> <span class="o">+</span> <span class="s">" "</span><span class="o">+</span> <span class="n">winStr</span> <span class="o">+</span><span class="s">" "</span> <span class="o">+</span> <span class="n">inFilePath</span> <span class="o">+</span> <span class="s">" "</span> <span class="o">+</span> <span class="n">outFilePath</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">port</span><span class="p">,</span> <span class="n">mtu</span><span class="p">,</span> <span class="n">win</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">regex</span> <span class="n">pattern</span><span class="p">(</span><span class="s">R"(^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}) (\d{1,5}) (\d*) (\d*) (.*) (.*)$)"</span><span class="p">);</span><span class="c1">//Regex pattern to verify input</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">smatch</span> <span class="n">match</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">regex_search</span><span class="p">(</span><span class="n">in</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)))</span> <span class="p">{</span> <span class="c1">// Verify the input</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Incorrect input format"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="n">port</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">stoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span>
+        <span class="n">mtu</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">stoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">3</span><span class="p">]);</span>
+        <span class="n">win</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">stoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">4</span><span class="p">]);</span>
+    <span class="p">}</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">mtu</span> <span class="o">&lt;</span> <span class="mi">6</span><span class="p">){</span><span class="c1">//Verify the correct mtu size</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Minimum MTU is 6."</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">win</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">){</span><span class="c1">//Verify the correct mtu size</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Minimum window size is 1."</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+
+
+    <span class="c1">////////////////////////////////////////CREATE SOCKET///////////////////////////////////////////////</span>
+    <span class="kt">int</span> <span class="n">socketID</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="nc">sockaddr_in</span> <span class="n">serverAddr</span><span class="p">;</span>
+    <span class="n">socketID</span> <span class="o">=</span> <span class="n">socketBind</span><span class="p">(</span><span class="n">serverAddr</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">ip</span><span class="p">);</span> <span class="c1">//Create the socket and connect it</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">ifstream</span> <span class="n">inputFile</span><span class="p">(</span><span class="n">inFilePath</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">binary</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">inputFile</span><span class="p">.</span><span class="n">is_open</span><span class="p">()))</span> <span class="p">{</span><span class="c1">// Check if both files opened successfully</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Error opening the input file"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="kt">int</span> <span class="n">maxseq</span> <span class="o">=</span> <span class="n">getSize</span><span class="p">(</span><span class="n">inputFile</span><span class="p">,</span> <span class="n">mtu</span><span class="p">);</span>
+    <span class="kt">int</span> <span class="n">synack</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">ackCount</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+
+    <span class="c1">///////////////////////////////////////////////SEND SYN////////////////////////////////////////////////////////</span>
+    <span class="k">while</span><span class="p">(</span><span class="n">synack</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">ackCount</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">){</span>
+            <span class="c1">//std::cerr &lt;&lt; "Packet loss detected" &lt;&lt; std::endl;</span>
+        <span class="p">}</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">ackCount</span> <span class="o">==</span> <span class="mi">5</span><span class="p">){</span> <span class="c1">//Syn was attempted 5 times with 5 failues. Server assumed to be unreachable</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Reached max retransmission limit"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="n">syn</span><span class="p">(</span><span class="n">socketID</span><span class="p">,</span> <span class="n">mtu</span><span class="p">,</span> <span class="n">outFilePath</span><span class="p">,</span> <span class="n">maxseq</span><span class="p">,</span> <span class="n">win</span><span class="p">);</span> <span class="c1">//send the syn packet with all of the necessary connection parameters to the server</span>
+        <span class="n">synack</span> <span class="o">=</span> <span class="n">ackWait</span><span class="p">(</span><span class="n">socketID</span><span class="p">);</span> <span class="c1">//wait for the syn to be acked</span>
+        <span class="n">ackCount</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">//Increment the number of times the packet was sent</span>
+    <span class="p">}</span>
+    <span class="n">inputFile</span><span class="p">.</span><span class="n">close</span><span class="p">();</span>
+    <span class="c1">////////////////////////////////////////////START TRANSFER//////////////////////////////////</span>
+    <span class="kt">int</span> <span class="n">curseq</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">prevseq</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">streamoff</span> <span class="n">byteOffset</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">resendcounter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">tempwin</span> <span class="o">=</span> <span class="n">win</span><span class="p">;</span>
+    <span class="k">while</span><span class="p">(</span><span class="n">curseq</span> <span class="o">&lt;</span> <span class="n">maxseq</span><span class="p">){</span><span class="c1">//Repeat until file is completely sent</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">maxseq</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">win</span> <span class="o">+</span> <span class="n">curseq</span><span class="p">)){</span> <span class="c1">//adjust the window size since we are on the last few packets</span>
+            <span class="n">tempwin</span> <span class="o">=</span> <span class="n">maxseq</span><span class="o">-</span><span class="n">curseq</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">snd</span><span class="p">(</span><span class="n">socketID</span><span class="p">,</span> <span class="n">mtu</span><span class="p">,</span> <span class="n">curseq</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">byteOffset</span><span class="p">,</span> <span class="n">tempwin</span><span class="p">,</span> <span class="n">inFilePath</span><span class="p">);</span> <span class="c1">//send tempwin number of packets</span>
+        <span class="kt">int</span> <span class="n">ackseq</span><span class="p">;</span>
+        <span class="kt">int</span> <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">set</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">ack</span><span class="p">;</span>
+        <span class="k">while</span><span class="p">(</span><span class="n">counter</span> <span class="o">&lt;</span> <span class="n">tempwin</span><span class="p">){</span><span class="c1">//need to collect all of the acked seq in one shot in case of unordered acks</span>
+            <span class="k">if</span><span class="p">((</span><span class="n">ackseq</span> <span class="o">=</span> <span class="n">ackWait</span><span class="p">(</span><span class="n">socketID</span><span class="p">))</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+                <span class="c1">//std::cerr &lt;&lt; "Packet loss detected" &lt;&lt; std::endl;</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="c1">//std::cout &lt;&lt; "Ack recieved: " &lt;&lt; ackseq &lt;&lt; std::endl;</span>
+            <span class="n">ack</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">ackseq</span><span class="p">);</span>
+            <span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">num</span> <span class="o">:</span> <span class="n">ack</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">num</span> <span class="o">==</span> <span class="p">(</span><span class="n">curseq</span> <span class="o">+</span><span class="mi">1</span><span class="p">)){</span>
+                <span class="n">curseq</span><span class="o">++</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">curseq</span> <span class="o">==</span> <span class="n">prevseq</span><span class="p">){</span>
+            <span class="n">resendcounter</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+            <span class="n">resendcounter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">resendcounter</span> <span class="o">==</span> <span class="mi">5</span><span class="p">){</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Reached max retransmission limit"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="n">byteOffset</span> <span class="o">=</span> <span class="p">(</span><span class="n">curseq</span> <span class="o">*</span> <span class="p">(</span><span class="n">mtu</span><span class="o">-</span><span class="mi">5</span><span class="p">));</span><span class="c1">//move the pointer the the first byte past the last acked position</span>
+        <span class="n">prevseq</span> <span class="o">=</span> <span class="n">curseq</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Transmission complete"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h1 id="server-side-code">Server Side Code</h1>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">&lt;sys/socket.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;cstring&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;regex&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;netinet/in.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;arpa/inet.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;fstream&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;cstring&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;signal.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;filesystem&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;map&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;random&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;sys/wait.h&gt;</span><span class="cp">
+</span><span class="err">﻿</span>
+<span class="kt">void</span> <span class="nf">log</span><span class="p">(</span><span class="kt">bool</span> <span class="n">data</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">dropdata</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">ack</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">dropack</span><span class="p">,</span> <span class="kt">int</span> <span class="n">seq</span><span class="p">){</span>
+    <span class="k">auto</span> <span class="n">now</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">system_clock</span><span class="o">::</span><span class="n">now</span><span class="p">();</span>
+    <span class="n">std</span><span class="o">::</span><span class="kt">time_t</span> <span class="n">now_c</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">system_clock</span><span class="o">::</span><span class="n">to_time_t</span><span class="p">(</span><span class="n">now</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">tm</span><span class="o">*</span> <span class="n">utc_tm</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">gmtime</span><span class="p">(</span><span class="o">&amp;</span><span class="n">now_c</span><span class="p">);</span>
+    <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">30</span><span class="p">];</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">strftime</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buffer</span><span class="p">),</span> <span class="s">"%Y-%m-%dT%H:%M:%S"</span><span class="p">,</span> <span class="n">utc_tm</span><span class="p">);</span>
+    <span class="k">auto</span> <span class="n">milliseconds</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">duration_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">milliseconds</span><span class="o">&gt;</span><span class="p">(</span><span class="n">now</span><span class="p">.</span><span class="n">time_since_epoch</span><span class="p">())</span> <span class="o">%</span> <span class="mi">1000</span><span class="p">;</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">data</span><span class="p">){</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">buffer</span> <span class="o">&lt;&lt;</span> <span class="s">"."</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">setfill</span><span class="p">(</span><span class="sc">'0'</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">milliseconds</span><span class="p">.</span><span class="n">count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">"Z"</span> <span class="o">&lt;&lt;</span><span class="s">", DATA, "</span> <span class="o">&lt;&lt;</span> <span class="n">seq</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">dropdata</span><span class="p">){</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">buffer</span> <span class="o">&lt;&lt;</span> <span class="s">"."</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">setfill</span><span class="p">(</span><span class="sc">'0'</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">milliseconds</span><span class="p">.</span><span class="n">count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">"Z"</span> <span class="o">&lt;&lt;</span><span class="s">", DROP DATA, "</span> <span class="o">&lt;&lt;</span> <span class="n">seq</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">ack</span><span class="p">){</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">buffer</span> <span class="o">&lt;&lt;</span> <span class="s">"."</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">setfill</span><span class="p">(</span><span class="sc">'0'</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">milliseconds</span><span class="p">.</span><span class="n">count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">"Z"</span> <span class="o">&lt;&lt;</span><span class="s">", ACK, "</span> <span class="o">&lt;&lt;</span> <span class="n">seq</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">dropack</span><span class="p">){</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">buffer</span> <span class="o">&lt;&lt;</span> <span class="s">"."</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">setfill</span><span class="p">(</span><span class="sc">'0'</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">milliseconds</span><span class="p">.</span><span class="n">count</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">"Z"</span> <span class="o">&lt;&lt;</span><span class="s">", DROP ACK, "</span> <span class="o">&lt;&lt;</span> <span class="n">seq</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="err">﻿</span>
+<span class="kt">void</span> <span class="n">sig_alrm</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Connection with client lost"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="err">﻿</span>
+<span class="c1">//Creates a directory at the specified output path if it doesn't already exist</span>
+<span class="kt">void</span> <span class="n">createDir</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">outFilePath</span><span class="p">){</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">directoryPath</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">regex</span> <span class="n">pattern</span><span class="p">(</span><span class="s">R"(^(.*/)?(.*)$)"</span><span class="p">);</span> <span class="c1">//Regex pattern to split the path and file</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">smatch</span> <span class="n">match</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">regex_search</span><span class="p">(</span><span class="n">outFilePath</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">pattern</span><span class="p">))</span> <span class="p">{</span>
+        <span class="n">directoryPath</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">path</span> <span class="n">outDir</span> <span class="o">=</span> <span class="n">directoryPath</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">directoryPath</span><span class="p">.</span><span class="n">empty</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="o">!</span><span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">exists</span><span class="p">(</span><span class="n">outDir</span><span class="p">)))</span> <span class="p">{</span> <span class="c1">//Check if the directory already exists</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">filesystem</span><span class="o">::</span><span class="n">create_directories</span><span class="p">(</span><span class="n">outDir</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">textFile</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+    <span class="p">}</span>
+    <span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="err">﻿</span>
+<span class="kt">void</span> <span class="n">ack</span><span class="p">(</span><span class="kt">int</span> <span class="n">seq</span><span class="p">,</span> <span class="kt">int</span> <span class="n">socketID</span><span class="p">,</span> <span class="k">struct</span> <span class="nc">sockaddr</span><span class="o">*</span> <span class="n">clientAddr</span><span class="p">,</span> <span class="n">socklen_t</span> <span class="n">len</span><span class="p">){</span>
+    <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">ack</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">seq</span><span class="p">);</span>
+    <span class="n">strncpy</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">ack</span><span class="p">.</span><span class="n">c_str</span><span class="p">(),</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="n">buf</span><span class="p">[</span><span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="sc">'\0'</span><span class="p">;</span>
+    <span class="n">log</span><span class="p">(</span><span class="nb">false</span><span class="p">,</span> <span class="nb">false</span><span class="p">,</span> <span class="nb">true</span><span class="p">,</span> <span class="nb">false</span><span class="p">,</span> <span class="n">seq</span><span class="p">);</span>
+    <span class="c1">//std::cout &lt;&lt;"Acked: " &lt;&lt;buf &lt;&lt; std::endl;</span>
+    <span class="kt">int</span> <span class="n">bytesSent</span> <span class="o">=</span> <span class="n">sendto</span><span class="p">(</span><span class="n">socketID</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">clientAddr</span><span class="p">,</span> <span class="n">len</span><span class="p">);</span> <span class="c1">//Send the ack</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">bytesSent</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//Catch any errors</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Sendto error: "</span> <span class="o">&lt;&lt;</span> <span class="n">strerror</span><span class="p">(</span><span class="n">errno</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="err">﻿</span>
+<span class="kt">void</span> <span class="n">rcv</span><span class="p">(</span><span class="kt">int</span> <span class="n">socketID</span><span class="p">,</span> <span class="kt">int</span> <span class="n">maxseq</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">win</span><span class="p">,</span> <span class="kt">int</span> <span class="n">mtu</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">ofstream</span><span class="o">&amp;</span> <span class="n">outputFile</span><span class="p">,</span> <span class="k">struct</span> <span class="nc">sockaddr</span><span class="o">*</span> <span class="n">clientAddr</span><span class="p">,</span> <span class="n">socklen_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">int</span> <span class="n">perc</span><span class="p">){</span>
+    <span class="n">signal</span><span class="p">(</span><span class="n">SIGALRM</span><span class="p">,</span> <span class="n">sig_alrm</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">regex</span> <span class="n">pattern</span><span class="p">(</span><span class="s">R"((\d+) ((.|\r|\n)*))"</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">smatch</span> <span class="n">match</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">curseq</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">random_device</span> <span class="n">rd</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">mt19937</span> <span class="n">gen</span><span class="p">(</span><span class="n">rd</span><span class="p">());</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">uniform_int_distribution</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">dis</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">map</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">window</span><span class="p">;</span>
+    <span class="k">while</span><span class="p">(</span><span class="n">curseq</span> <span class="o">&lt;</span> <span class="n">maxseq</span><span class="p">){</span>    
+        <span class="kt">int</span> <span class="n">seq</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">message</span><span class="p">;</span>
+        <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="n">mtu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">];</span>
+        <span class="n">alarm</span><span class="p">(</span><span class="mi">150</span><span class="p">);</span>
+        <span class="kt">ssize_t</span> <span class="n">nbytes</span> <span class="o">=</span> <span class="n">recvfrom</span><span class="p">(</span><span class="n">socketID</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">clientAddr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">size</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">nbytes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Error receiving data"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="n">buf</span><span class="p">[</span><span class="n">nbytes</span><span class="p">]</span> <span class="o">=</span> <span class="sc">'\0'</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">data</span><span class="p">(</span><span class="n">buf</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">regex_search</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)){</span>
+            <span class="n">seq</span> <span class="o">=</span> <span class="n">stoi</span><span class="p">(</span><span class="n">match</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">str</span><span class="p">());</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">str</span><span class="p">();</span>
+            <span class="c1">//std::cout &lt;&lt; seq &lt;&lt; std::endl;</span>
+        <span class="p">}</span>        
+        <span class="kt">int</span> <span class="n">rand</span> <span class="o">=</span> <span class="n">dis</span><span class="p">(</span><span class="n">gen</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">rand</span> <span class="o">&gt;</span> <span class="n">perc</span><span class="p">){</span> <span class="c1">//Packet not dropped</span>
+            <span class="n">log</span><span class="p">(</span><span class="nb">true</span><span class="p">,</span> <span class="nb">false</span><span class="p">,</span> <span class="nb">false</span><span class="p">,</span> <span class="nb">false</span><span class="p">,</span> <span class="n">seq</span><span class="p">);</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">seq</span> <span class="o">==</span> <span class="n">curseq</span> <span class="o">+</span> <span class="mi">1</span><span class="p">){</span>
+                <span class="n">outputFile</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="n">message</span><span class="p">.</span><span class="n">c_str</span><span class="p">(),</span> <span class="n">message</span><span class="p">.</span><span class="n">size</span><span class="p">());</span>
+                <span class="n">ack</span><span class="p">(</span><span class="n">curseq</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">socketID</span><span class="p">,</span> <span class="n">clientAddr</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+                <span class="n">curseq</span><span class="o">++</span><span class="p">;</span>
+                <span class="k">while</span> <span class="p">(</span><span class="n">window</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">curseq</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">!=</span> <span class="n">window</span><span class="p">.</span><span class="n">end</span><span class="p">())</span> <span class="p">{</span>
+                    <span class="n">outputFile</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="n">window</span><span class="p">[</span><span class="n">curseq</span> <span class="o">+</span> <span class="mi">1</span><span class="p">].</span><span class="n">c_str</span><span class="p">(),</span> <span class="n">window</span><span class="p">[</span><span class="n">curseq</span> <span class="o">+</span> <span class="mi">1</span><span class="p">].</span><span class="n">size</span><span class="p">());</span>
+                    <span class="n">window</span><span class="p">.</span><span class="n">erase</span><span class="p">(</span><span class="n">curseq</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+                    <span class="n">ack</span><span class="p">(</span><span class="n">curseq</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">socketID</span><span class="p">,</span> <span class="n">clientAddr</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+                    <span class="n">curseq</span><span class="o">++</span><span class="p">;</span>
+                <span class="p">}</span>
+            <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">window</span><span class="p">.</span><span class="n">count</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">){</span>
+                <span class="n">ack</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">socketID</span><span class="p">,</span> <span class="n">clientAddr</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+                <span class="n">window</span><span class="p">[</span><span class="n">seq</span><span class="p">]</span> <span class="o">=</span> <span class="n">message</span><span class="p">;</span>
+            <span class="p">}</span>
+<span class="err">﻿</span>
+        <span class="p">}</span><span class="k">else</span><span class="p">{</span><span class="c1">//packet dropped</span>
+            <span class="n">log</span><span class="p">(</span><span class="nb">false</span><span class="p">,</span> <span class="nb">true</span><span class="p">,</span> <span class="nb">false</span><span class="p">,</span> <span class="nb">false</span><span class="p">,</span> <span class="n">seq</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="n">alarm</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="err">﻿</span>
+<span class="c1">//This function recieves messages sequentially and then echos them back to the sender</span>
+<span class="kt">void</span> <span class="n">sessionStart</span><span class="p">(</span><span class="kt">int</span> <span class="n">socketID</span><span class="p">,</span> <span class="k">struct</span> <span class="nc">sockaddr</span><span class="o">*</span> <span class="n">clientAddr</span><span class="p">,</span> <span class="n">socklen_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">int</span> <span class="n">perc</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">n</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//Loop infinitely to keep the server running</span>
+        <span class="c1">//Recieve the sync packet</span>
+        <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">300</span><span class="p">];</span>
+        <span class="n">memset</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">));</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Waiting for transmission request"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">((</span><span class="n">n</span> <span class="o">=</span> <span class="n">recvfrom</span><span class="p">(</span><span class="n">socketID</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">clientAddr</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">size</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">){</span>
+            <span class="c1">//fork</span>
+            <span class="n">pid_t</span> <span class="n">pid</span> <span class="o">=</span> <span class="n">fork</span><span class="p">();</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">pid</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Fork failed"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+                <span class="k">continue</span><span class="p">;</span>
+            <span class="p">}</span><span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">pid</span> <span class="o">==</span> <span class="mi">0</span><span class="p">){</span>
+                <span class="n">buf</span><span class="p">[</span><span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="sc">'\0'</span><span class="p">;</span>
+                <span class="kt">int</span> <span class="n">maxseq</span><span class="p">,</span> <span class="n">win</span><span class="p">,</span> <span class="n">mtu</span><span class="p">;</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">outFilePath</span><span class="p">;</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">regex</span> <span class="n">pattern</span><span class="p">(</span><span class="s">R"(^(\d*) (\d*) (\d*) (.*)$)"</span><span class="p">);</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">smatch</span> <span class="n">match</span><span class="p">;</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">buff</span><span class="p">(</span><span class="n">buf</span><span class="p">);</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">regex_search</span><span class="p">(</span><span class="n">buff</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)){</span>
+                    <span class="n">maxseq</span> <span class="o">=</span> <span class="n">stoi</span><span class="p">(</span><span class="n">match</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">str</span><span class="p">());</span>
+                    <span class="n">win</span> <span class="o">=</span> <span class="n">stoi</span><span class="p">(</span><span class="n">match</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">str</span><span class="p">());</span>
+                    <span class="n">mtu</span> <span class="o">=</span> <span class="n">stoi</span><span class="p">(</span><span class="n">match</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="n">str</span><span class="p">());</span>
+                    <span class="n">outFilePath</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="mi">4</span><span class="p">].</span><span class="n">str</span><span class="p">();</span>
+                    <span class="n">createDir</span><span class="p">(</span><span class="n">outFilePath</span><span class="p">);</span>
+                    <span class="n">std</span><span class="o">::</span><span class="n">ofstream</span> <span class="n">outputFile</span><span class="p">(</span><span class="n">outFilePath</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">binary</span><span class="p">);</span>
+                    <span class="n">std</span><span class="o">::</span><span class="n">random_device</span> <span class="n">rd</span><span class="p">;</span>
+                    <span class="n">std</span><span class="o">::</span><span class="n">mt19937</span> <span class="n">gen</span><span class="p">(</span><span class="n">rd</span><span class="p">());</span>
+                    <span class="n">std</span><span class="o">::</span><span class="n">uniform_int_distribution</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">dis</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+                    <span class="kt">int</span> <span class="n">rand</span> <span class="o">=</span> <span class="n">dis</span><span class="p">(</span><span class="n">gen</span><span class="p">);</span>
+                    <span class="k">if</span><span class="p">(</span><span class="n">rand</span> <span class="o">&gt;</span> <span class="n">perc</span><span class="p">){</span><span class="c1">//Syn not dropped</span>
+                        <span class="n">log</span><span class="p">(</span><span class="nb">false</span><span class="p">,</span> <span class="nb">false</span><span class="p">,</span> <span class="nb">true</span><span class="p">,</span> <span class="nb">false</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>        
+                        <span class="n">ack</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">socketID</span><span class="p">,</span> <span class="n">clientAddr</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span><span class="c1">//if this ack drops system fails</span>
+                        <span class="n">rcv</span><span class="p">(</span><span class="n">socketID</span><span class="p">,</span> <span class="n">maxseq</span><span class="p">,</span> <span class="n">win</span><span class="p">,</span> <span class="n">mtu</span><span class="p">,</span> <span class="n">outputFile</span><span class="p">,</span> <span class="n">clientAddr</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">perc</span><span class="p">);</span>
+                        <span class="n">outputFile</span><span class="p">.</span><span class="n">close</span><span class="p">();</span>
+                        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Transmission complete"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+                        <span class="n">_exit</span><span class="p">(</span><span class="n">EXIT_SUCCESS</span><span class="p">);</span>
+                    <span class="p">}</span><span class="k">else</span><span class="p">{</span><span class="c1">//Syn is dropped</span>
+                        <span class="n">log</span><span class="p">(</span><span class="nb">false</span><span class="p">,</span> <span class="nb">false</span><span class="p">,</span> <span class="nb">false</span><span class="p">,</span> <span class="nb">true</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+                        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Synchrinization failure"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+                        <span class="n">outputFile</span><span class="p">.</span><span class="n">close</span><span class="p">();</span>
+                        <span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="c1">// Parent process</span>
+                <span class="kt">int</span> <span class="n">status</span><span class="p">;</span>
+                <span class="n">waitpid</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">status</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>  <span class="c1">// Wait for child process to finish</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="err">﻿</span>
+<span class="c1">//This function is used to create the socket and bind it</span>
+<span class="kt">int</span> <span class="n">socketBind</span><span class="p">(</span><span class="n">sockaddr_in</span> <span class="n">serverAddr</span><span class="p">,</span> <span class="kt">int</span> <span class="n">port</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">socketID</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">SOCK_DGRAM</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span> <span class="c1">//Create the socket</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">socketID</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//Check if the socket was created successfully</span>
+        <span class="n">perror</span><span class="p">(</span><span class="s">"socket() failed"</span><span class="p">);</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">bzero</span><span class="p">(</span><span class="o">&amp;</span><span class="n">serverAddr</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">serverAddr</span><span class="p">));</span> <span class="c1">//Zero out the input struct</span>
+    <span class="n">serverAddr</span><span class="p">.</span><span class="n">sin_family</span> <span class="o">=</span> <span class="n">AF_INET</span><span class="p">;</span> <span class="c1">//Set the socket parameters</span>
+    <span class="n">serverAddr</span><span class="p">.</span><span class="n">sin_addr</span><span class="p">.</span><span class="n">s_addr</span> <span class="o">=</span> <span class="n">htonl</span><span class="p">(</span><span class="n">INADDR_ANY</span><span class="p">);</span>
+    <span class="n">serverAddr</span><span class="p">.</span><span class="n">sin_port</span> <span class="o">=</span> <span class="n">htons</span><span class="p">(</span><span class="n">port</span><span class="p">);</span>
+<span class="err">﻿</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">bind</span><span class="p">(</span><span class="n">socketID</span><span class="p">,</span> <span class="p">(</span><span class="k">struct</span> <span class="nc">sockaddr</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">serverAddr</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">serverAddr</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//Bind the socket</span>
+        <span class="n">perror</span><span class="p">(</span><span class="s">"bind() failed"</span><span class="p">);</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="err">﻿</span>
+    <span class="k">return</span> <span class="n">socketID</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="err">﻿</span>
+<span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// Check for the correct number of arguments</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Incorrect number of arguments"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="kt">int</span> <span class="n">port</span><span class="p">,</span> <span class="n">perc</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">portStr</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">percStr</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">input</span> <span class="o">=</span> <span class="n">portStr</span> <span class="o">+</span> <span class="s">" "</span><span class="o">+</span><span class="n">percStr</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">regex</span> <span class="n">pattern</span><span class="p">(</span><span class="s">R"(^(\d{1,5}) (0|100|[1-9]\d?)$)"</span><span class="p">);</span><span class="c1">//Regex to check against the input</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">smatch</span> <span class="n">match</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">regex_search</span><span class="p">(</span><span class="n">input</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)))</span> <span class="p">{</span> <span class="c1">//Input verification</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"Incorrect input format"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">exit</span><span class="p">(</span><span class="n">EXIT_FAILURE</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="n">port</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">stoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span> <span class="c1">//Convert the input to a number</span>
+        <span class="n">perc</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">stoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span>
+    <span class="p">}</span>
+    <span class="kt">int</span> <span class="n">socketID</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="nc">sockaddr_in</span> <span class="n">serverAddr</span><span class="p">,</span> <span class="n">cliaddr</span><span class="p">;</span>
+    <span class="n">socketID</span> <span class="o">=</span> <span class="n">socketBind</span><span class="p">(</span><span class="n">serverAddr</span><span class="p">,</span> <span class="n">port</span><span class="p">);</span> <span class="c1">//Create the socket and bind it</span>
+    <span class="n">sessionStart</span><span class="p">(</span><span class="n">socketID</span><span class="p">,</span> <span class="p">(</span><span class="k">struct</span> <span class="nc">sockaddr</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">cliaddr</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">cliaddr</span><span class="p">),</span> <span class="n">perc</span><span class="p">);</span> <span class="c1">//Start the server functionality</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+</div>
+  </main>
+  <footer class="mt-auto py-3 text-center">
+
+  <small class="text-muted mb-2">
+    <i class="fas fa-code"></i> with <i class="fas fa-heart"></i>
+    by <strong>Bradley Paoli</strong>
+  </small>
+
+  <div class="container-fluid justify-content-center"><a class="social mx-1"  href="mailto:bradleypaoli@gmail.com"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#db4437'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fas fa-envelope fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.github.com/bpaoli"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#333333'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-github fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.instagram.com/brad_paoli"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#405de6'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-instagram fa-1x"></i>
+    </a><a class="social mx-1"  href="https://www.linkedin.com/in/bradley-paoli"
+       style="color: #6c757d"
+       onMouseOver="this.style.color='#007bb5'"
+       onMouseOut="this.style.color='#6c757d'">
+      <i class="fab fa-linkedin-in fa-1x"></i>
+    </a>
+
+</div></footer>
+
+  
+  <!-- GitHub Buttons -->
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<!-- jQuery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<!-- Popper.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<!-- wow.js CDN & Activation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.js"></script>
+<script> new WOW().init(); </script>
+
+<!-- Initialize all tooltips -->
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+</body>
+
+</html>
