@@ -75,6 +75,7 @@
 </nav>
     <div class="col-lg-10 mx-auto mt-5 markdown-body">
   <h1 id="the-package-vault">The Package Vault</h1>
+<p><img src="/assets/images/PackageVault_V3_Render_.jpg" alt="Initial rendering of the final design" /></p>
 
 <h3 id="tools">Tools</h3>
 <ul>
@@ -128,13 +129,13 @@
 <ol>
   <li><strong>Building the physical prototype:</strong>
     <ul>
-      <li>Constructed the dual-chamber lockbox with a tambour-style door separating the chambers.</li>
+      <li>Constructed the dual-chamber lockbox with a tambour-style door separating the chambers (images shown below).</li>
       <li>Integrated motors for operating the tambour door.</li>
     </ul>
   </li>
   <li><strong>Embedded System Integration:</strong>
     <ul>
-      <li>Wrote the embedded C code to control physical interactions with the lockbox.</li>
+      <li>Wrote the embedded C code to control physical interactions with the lockbox (code shown below).</li>
       <li>Integrated:
         <ul>
           <li>Electromagnetic locks to manage access to both chambers.</li>
@@ -149,6 +150,83 @@
 
 <h3 id="additional-resources">Additional Resources</h3>
 <p><a href="https://docs.google.com/document/d/1WqZcZflfH0FgMuc_nilx3sjoyTQBZSVSMhjYafap2CI/edit?usp=sharing">Full Design Document</a></p>
+
+<hr />
+
+<h3 id="prototype-images">Prototype Images</h3>
+<h4 id="front-view">Front View</h4>
+<p><img src="/assets/images/front.jpg" alt="Front view of box" />
+This image shows the front view of the box, highlighting both the upper and lower chambers. The sensor suite is visible on top, showcasing its positioning relative to the box’s structure.</p>
+
+<hr />
+
+<h4 id="side-view">Side View</h4>
+<p><img src="/assets/images/corner.jpg" alt="Another view of box" />
+This side view provides a closer look at the control electronics mounted on top. It also displays the pulley system for the middle door, which separates the chambers.</p>
+<blockquote>
+  <p><strong>Note:</strong> Only a single slat of the intended tambour-style door is implemented in this prototype. The full door wasn’t necessary, as this proof of concept focuses on the control electronics.</p>
+</blockquote>
+
+<hr />
+
+<h4 id="sensor-suite-close-up">Sensor Suite Close-Up</h4>
+<p><img src="/assets/images/sensors.jpg" alt="Initial rendering of the final design" /></p>
+<ul>
+  <li><strong>3D-printed brackets</strong>: The black bracket houses the camera on top, with a motion detection sensor mounted below.</li>
+  <li><strong>Purple bracket components</strong>:
+    <ul>
+      <li>Information display for system status (top right).</li>
+      <li>Barcode scanner for package scanning (left of the display).</li>
+      <li>Temporary state control switches (below the scanner, not present in the final design).</li>
+      <li>Keypad for entering a backup password in case the app fails to function.</li>
+    </ul>
+  </li>
+</ul>
+
+<hr />
+
+<h4 id="top-view-of-control-electronics">Top View of Control Electronics</h4>
+<p><img src="/assets/images/top.jpg" alt="Initial rendering of the final design" />
+This top view reveals the inner workings of the control electronics, including:</p>
+
+<ul>
+  <li><strong>Sensor suite</strong>: Mounted in brackets on the left.</li>
+  <li><strong>ESP32c3 chips</strong>:
+    <ul>
+      <li>Central chip on the breadboard (middle) communicates with the server and other components.</li>
+      <li>Secondary chip on the right manages mechanical functions, including motor and door controls, via an internal state machine.</li>
+    </ul>
+  </li>
+  <li><strong>H-bridges</strong> (red boards): Act as switches to control high-power motors and electromagnetic locks for the doors.</li>
+</ul>
+
+<blockquote>
+  <p>Splitting functionality across two ESP32c3 chips was necessary due to GPIO pin limitations.</p>
+</blockquote>
+
+<hr />
+
+<h4 id="inside-view-of-top-door">Inside View of Top Door</h4>
+<p><img src="/assets/images/door.jpg" alt="Initial rendering of the final design" />
+This image focuses on the inside of the top door:</p>
+
+<ul>
+  <li><strong>Electromagnetic lock</strong>: The metal component on top locks the door securely.</li>
+  <li><strong>Magnet sensor</strong>: Located at the bottom, it informs the control chips about the door’s open or closed state.</li>
+  <li><strong>Single slat</strong>: Visible at the bottom, representing the prototype for the tambour-style door.</li>
+</ul>
+
+<hr />
+
+<h4 id="pulley-system">Pulley System</h4>
+<p><img src="/assets/images/pulley.jpg" alt="Initial rendering of the final design" />
+The pulley system utilizes:</p>
+
+<ul>
+  <li><strong>Motors</strong>: Two motors control the winding of strings, which guide the door slats.</li>
+  <li><strong>3D-printed components</strong>: Yellow cylinders guide the strings along their tracks.
+This mechanism allows the middle door to move back and forth smoothly.</li>
+</ul>
 
 <hr />
 
