@@ -1,7 +1,7 @@
 ---
 name: CDC FIFO
 tools: [SystemVerilog, Logic Design, FPGA]
-image: https://www.icdrex.com/wp-content/uploads/2022/11/fpga-beginners-guide.jpg
+image: fpga.webp
 color: primary
 description: The CDC FIFO project implements a Clock Domain Crossing FIFO module in SystemVerilog to facilitate seamless data transfer between hardware components operating on different clock domains.
 ---

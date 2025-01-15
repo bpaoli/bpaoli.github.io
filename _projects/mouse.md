@@ -1,7 +1,7 @@
 ---
 name: Gyroscopic Mouse
 tools: [Embedded C, Embedded Systems, ESP32C3]
-image: https://microsoft.github.io/jacdac-docs/images/devices/espressif/esp32c3rustdevkitv12a.catalog.jpg
+image: esp32c3.jpg
 description: A Bluetooth mouse project using an accelerometer and Bluetooth modules on an ESP32C3.
 ---
 

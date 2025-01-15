@@ -1,7 +1,7 @@
 ---
 name: Weather Server
 tools: [Embedded C, Embedded Systems, ESP32C3, Python]
-image: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZ6ET8j7wpLwE9dF_9CAD8jwzsKNHP8PvQNg&s
+image: esp.jpg
 description: A simple weather server using the ESP32C3 to read temperature and humidity data and transmit it to a Python-based server.
 ---
 

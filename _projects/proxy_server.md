@@ -1,7 +1,7 @@
 ---
 name: C2S Proxy
 tools: [C++, Socket Programming, Unix]
-image: https://cdn.pixabay.com/photo/2013/07/13/10/17/computer-156950_1280.png
+image: proxy.png
 description: A proxy server that converts HTTP GET and HEAD requests to HTTPS, with blacklist management and traffic logging.
 ---
 # C2S Proxy

@@ -1,7 +1,7 @@
 ---
 name: Frog Jump Verilog Game
 tools: [Verilog, Logic Design, FPGA]
-image: https://www.amd.com/content/dam/amd/en/images/products/boards/2410750-artix-7-xc7a35t-board-product.jpg
+image: basys3.avif
 description: A simple hardware-implemented game where a frog jumps to avoid obstacles, built for the Basys3 FPGA board using Verilog and VGA output.
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: File Transfer Protocol
 tools: [C++, Socket Programming, Unix]
-image: https://img.freepik.com/free-vector/file-transfer-concept-illustration_114360-580.jpg?ga=GA1.1.856602515.1736808652&semt=ais_hybrid
+image: file.jpg
 description: A custom-built protocol project designed for reliable file transfer between clients and servers over unpredictable networks with built in testing for real-world scenarios.
 ---
 
