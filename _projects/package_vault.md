@@ -1,7 +1,7 @@
 ---
 name: The Package Vault
 tools: [Embedded C, Full Stack, Embedded Systems]
-image: https://cdn.pixabay.com/photo/2024/06/26/23/36/package-8856091_640.png
+image: unnamed.png
 description: A package theft prevention system project utilizing a smart lockbox with an extensive sensor array and a full stack software suite for device mangement and feature implementation.
 pdf: Formal_Design_Document.pdf
 ---
