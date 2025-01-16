@@ -22,7 +22,7 @@ The FIFO is implemented using **Random Access Memory (RAM)**, which serves as th
 This system allows for **asynchronous data transfer** between components with independent clock domains, making it an efficient solution for inter-component communication.
 
 ## FIFO Code
-```systemverilog
+```verilog
 module fifo_cdc_1r1w
  #(parameter [31:0] width_p = 32
   ,parameter [31:0] lg_depth_p = 8
